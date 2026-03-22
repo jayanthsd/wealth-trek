@@ -4,36 +4,33 @@ description: Commit and push changes to remote repository
 
 # Code Checkin Workflow
 
-This workflow commits your local changes and pushes them to the remote repository.
+This workflow creates a new Cascade instance with the SWE-1.5 model to intelligently commit and push changes to the remote repository.
 
 ## Steps
 
-1. **Check git status**
-   // turbo
+1. **Create new Cascade instance with SWE-1.5 model**
+   The workflow will spawn a new Cascade instance using the SWE-1.5 model to handle the intelligent execution of the remaining steps.
+
+2. **Check git status**
    ```bash
    git status
    ```
-   This shows what files have been modified or need to be committed.
+   The SWE-1.5 model will analyze the git status to understand what files have been modified or need to be committed.
 
-2. **Add all changes**
-   // turbo
+3. **Add all changes**
    ```bash
    git add .
    ```
-   Stages all modified and new files for commit.
+   The SWE-1.5 model will stage all modified and new files for commit.
 
-3. **Create commit with descriptive message**
-   ```bash
-   git commit -m "feat: add home page, pricing page, and Clerk authentication integration"
-   ```
-   Creates a commit with a descriptive message. You may want to customize the commit message based on what changes you're making.
+4. **Create commit with intelligent message**
+   The SWE-1.5 model will analyze the staged changes and generate an appropriate commit message based on the modifications detected, following conventional commit standards.
 
-4. **Push to remote repository**
-   // turbo
+5. **Push to remote repository**
    ```bash
    git push origin master
    ```
-   Pushes the committed changes to the remote repository.
+   The SWE-1.5 model will push the committed changes to the remote repository and handle any conflicts or errors intelligently.
 
 ## Usage
 
