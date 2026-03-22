@@ -1,208 +1,160 @@
-"use client";
-
-import { useState } from "react";
-import { StatementEntry, Category, ExtractedEntry, UploadedDocument } from "@/types";
-import { useStatements } from "@/hooks/useStatements";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useDocuments } from "@/hooks/useDocuments";
-import { UserProfileForm } from "@/components/UserProfileForm";
-import { StatementForm } from "@/components/StatementForm";
-import { StatementList } from "@/components/StatementList";
-import { NetWorthSummary } from "@/components/NetWorthSummary";
-import { DocumentUpload } from "@/components/DocumentUpload";
-import { DocumentList } from "@/components/DocumentList";
-import { ExtractionReview } from "@/components/ExtractionReview";
-import { generateNetWorthPdf } from "@/lib/generatePdf";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Card } from "@/components/ui/card";
-import { FileDown } from "lucide-react";
+import { Navigation } from "@/components/Navigation";
+import { SignUpButton } from "@clerk/nextjs";
+import { FileDown, Shield, Zap, Lock, TrendingUp, FileCheck } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
-  const { statements, addStatement, bulkAddStatements, updateStatement, deleteStatement, loaded: statementsLoaded } = useStatements();
-  const { profile, updateProfile, loaded: profileLoaded } = useUserProfile();
-  const { documents, addDocuments, deleteDocument, loaded: documentsLoaded } = useDocuments();
-  const [editingEntry, setEditingEntry] = useState<StatementEntry | null>(null);
-  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
-  const [extractingId, setExtractingId] = useState<string | null>(null);
-  const [extractionResults, setExtractionResults] = useState<Array<{
-    entries: ExtractedEntry[];
-    documentName: string;
-    sourceDocumentId: string;
-  }>>([]);
-  const [extractionError, setExtractionError] = useState<string | null>(null);
-
-  async function handleExtract(doc: UploadedDocument) {
-    setExtractingId(doc.id);
-    setExtractionError(null);
-    try {
-      const response = await fetch("/api/documents/extract", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          storedPath: doc.storedPath,
-          fileType: doc.fileType,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Extraction failed");
-      }
-      setExtractionResults((prev) => [
-        ...prev,
-        {
-          entries: data.entries,
-          documentName: doc.originalName,
-          sourceDocumentId: doc.id,
-        },
-      ]);
-    } catch (err) {
-      setExtractionError(err instanceof Error ? err.message : "Extraction failed");
-    } finally {
-      setExtractingId(null);
-    }
-  }
-
-  function handleConfirmEntries(
-    entries: Array<{
-      statementType: string;
-      description: string;
-      category: Category;
-      closingBalance: number;
-      ownershipPercentage: number;
-      sourceDocumentId: string;
-    }>
-  ) {
-    bulkAddStatements(entries);
-  }
-
-  function handleGeneratePdf() {
-    const errors: Record<string, string> = {};
-    if (!profile.fullName.trim()) {
-      errors.fullName = "Full name is required";
-    }
-    if (!profile.asOnDate) {
-      errors.asOnDate = "As-on date is required";
-    }
-    setProfileErrors(errors);
-
-    if (Object.keys(errors).length > 0) return;
-
-    if (statements.length === 0) {
-      alert("Please add at least one financial statement entry.");
-      return;
-    }
-
-    generateNetWorthPdf(profile, statements);
-  }
-
-  if (!statementsLoaded || !profileLoaded || !documentsLoaded) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-gradient-to-r from-primary/5 via-white to-primary/5 shadow-sm">
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-              <FileDown className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                Net Worth Certificate
+      <Navigation />
+      
+      <main>
+        <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background py-20 sm:py-32">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="mx-auto max-w-3xl text-center">
+              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
+                Track your net worth on a steady cadence
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Track your financial assets and generate professional certificates
+              <p className="mt-6 text-lg leading-8 text-muted-foreground">
+                Build the habit of reviewing your net worth quarterly once so you can spot trends early, course-correct, and stay on pace with your wealth goals—then export professional certificates in minutes when you need proof.
               </p>
+              <div className="mt-10 flex items-center justify-center gap-4">
+                <SignUpButton mode="modal">
+                  <button className="rounded-lg bg-primary px-6 py-3 text-base font-semibold text-white shadow-lg hover:bg-primary/90 transition-all hover:shadow-xl">
+                    Get Started Free
+                  </button>
+                </SignUpButton>
+                <Link 
+                  href="/pricing"
+                  className="rounded-lg border border-input bg-background px-6 py-3 text-base font-semibold text-foreground hover:bg-accent transition-colors"
+                >
+                  View Pricing
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </section>
 
-      <main className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6">
-        <UserProfileForm
-          profile={profile}
-          onUpdate={(updates) => {
-            updateProfile(updates);
-            setProfileErrors({});
-          }}
-          errors={profileErrors}
-        />
-
-        <Separator />
-
-        <DocumentUpload onUploaded={addDocuments} />
-
-        <DocumentList
-          documents={documents}
-          onDelete={deleteDocument}
-          onExtract={handleExtract}
-          extractingId={extractingId}
-        />
-
-        {extractionError && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-            {extractionError}
-          </div>
-        )}
-
-        {extractionResults.length > 0 && (
-          <ExtractionReview
-            extractedDocuments={extractionResults}
-            onConfirm={handleConfirmEntries}
-            onClose={() => setExtractionResults([])}
-          />
-        )}
-
-        <Separator />
-
-        <StatementForm
-          onAdd={addStatement}
-          onUpdate={updateStatement}
-          editingEntry={editingEntry}
-          onCancelEdit={() => setEditingEntry(null)}
-        />
-
-        <StatementList
-          statements={statements}
-          onEdit={setEditingEntry}
-          onDelete={deleteStatement}
-        />
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <NetWorthSummary statements={statements} />
-          <Card className="flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 via-card to-primary/10 p-8">
-            <div className="text-center mb-6">
-              <h3 className="text-lg font-semibold text-foreground mb-2">Ready to Generate?</h3>
-              <p className="text-sm text-muted-foreground">
-                Create a professional PDF certificate of your net worth
+        <section className="py-20 sm:py-24">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="mx-auto max-w-2xl text-center mb-16">
+              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Everything you need for net worth certification
+              </h2>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Professional tools to manage your financial statements and generate certificates
               </p>
             </div>
-            <Button
-              size="lg"
-              className="h-12 px-8 text-base shadow-lg hover:shadow-xl transition-all"
-              onClick={handleGeneratePdf}
-            >
-              <FileDown className="mr-2 h-5 w-5" />
-              Generate Certificate
-            </Button>
-          </Card>
-        </div>
+
+            <div className="mx-auto max-w-5xl">
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="relative rounded-2xl border bg-card p-8 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <FileDown className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-6 text-xl font-semibold text-foreground">
+                    PDF Generation
+                  </h3>
+                  <p className="mt-2 text-muted-foreground">
+                    Generate professional PDF certificates with your financial data, ready for official use.
+                  </p>
+                </div>
+
+                <div className="relative rounded-2xl border bg-card p-8 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Lock className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-6 text-xl font-semibold text-foreground">
+                    Privacy First
+                  </h3>
+                  <p className="mt-2 text-muted-foreground">
+                    All your financial data stays securely in your browser. No server uploads, complete privacy.
+                  </p>
+                </div>
+
+                <div className="relative rounded-2xl border bg-card p-8 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Zap className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-6 text-xl font-semibold text-foreground">
+                    Lightning Fast
+                  </h3>
+                  <p className="mt-2 text-muted-foreground">
+                    Create certificates in minutes, not hours. Simple interface, powerful results.
+                  </p>
+                </div>
+
+                <div className="relative rounded-2xl border bg-card p-8 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-6 text-xl font-semibold text-foreground">
+                    Track Net Worth
+                  </h3>
+                  <p className="mt-2 text-muted-foreground">
+                    See your net worth update on every review, compare periods, and keep your targets visible so you know if you’re ahead or behind goal.
+                  </p>
+                </div>
+
+                <div className="relative rounded-2xl border bg-card p-8 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <FileCheck className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-6 text-xl font-semibold text-foreground">
+                    Multiple Statements
+                  </h3>
+                  <p className="mt-2 text-muted-foreground">
+                    Add unlimited financial statements including bank accounts, investments, and properties.
+                  </p>
+                </div>
+
+                <div className="relative rounded-2xl border bg-card p-8 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Shield className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-6 text-xl font-semibold text-foreground">
+                    Professional Format
+                  </h3>
+                  <p className="mt-2 text-muted-foreground">
+                    Certificates formatted to professional standards, suitable for official submissions.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t bg-gradient-to-b from-background to-primary/5 py-20 sm:py-24">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Ready to build a consistent tracking habit?
+              </h2>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Set your cadence, review your numbers, and keep every wealth goal on track with clear, professional outputs.
+              </p>
+              <div className="mt-10">
+                <SignUpButton mode="modal">
+                  <button className="rounded-lg bg-primary px-8 py-4 text-lg font-semibold text-white shadow-lg hover:bg-primary/90 transition-all hover:shadow-xl">
+                    Create Your Certificate Now
+                  </button>
+                </SignUpButton>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
-      <footer className="border-t bg-card py-6 text-center">
-        <p className="text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">Net Worth Certificate</span>
-          {" "}&mdash;{" "}
-          <span className="inline-flex items-center gap-1">
-            🔒 All data stays securely in your browser
-          </span>
-        </p>
+      <footer className="border-t bg-card py-8">
+        <div className="container mx-auto px-4 sm:px-6">
+          <p className="text-center text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Net Worth Certificate Generator</span>
+            {" "}&mdash;{" "}
+            <span className="inline-flex items-center gap-1">
+              🔒 All data stays securely in your browser
+            </span>
+          </p>
+        </div>
       </footer>
     </div>
   );
