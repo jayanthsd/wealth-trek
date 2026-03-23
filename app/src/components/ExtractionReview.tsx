@@ -83,6 +83,7 @@ export function ExtractionReview({
         }))
       );
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setReviewEntries((prev) => [...prev, ...newEntries]);
     }
   }, [extractedDocuments, reviewEntries]);

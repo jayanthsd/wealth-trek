@@ -41,6 +41,7 @@ export function StatementForm({
 
   useEffect(() => {
     if (editingEntry) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         statementType: editingEntry.statementType,
         description: editingEntry.description,
@@ -48,6 +49,7 @@ export function StatementForm({
         closingBalance: String(editingEntry.closingBalance),
         ownershipPercentage: String(editingEntry.ownershipPercentage),
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setErrors({});
     }
   }, [editingEntry]);

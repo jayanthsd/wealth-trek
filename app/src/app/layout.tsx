@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Net Worth Certificate Generator",
-  description: "Generate professional net worth certificates from your financial statements",
+  title: "Wealth Tracker",
+  description: "Track your net worth, analyze financial trends, and build wealth with AI-powered guidance",
 };
 
 export default function RootLayout({
@@ -31,6 +32,7 @@ export default function RootLayout({
         <ClerkProvider>
           {children}
         </ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );

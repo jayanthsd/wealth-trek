@@ -7,20 +7,20 @@ import { v4 as uuidv4 } from "uuid";
 const STORAGE_KEY = "nwc_statements";
 
 export function useStatements() {
-  const [statements, setStatements] = useState<StatementEntry[]>([]);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
+  const [statements, setStatements] = useState<StatementEntry[]>(() => {
+    if (typeof window === "undefined") return [];
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setStatements(JSON.parse(stored));
+        return JSON.parse(stored) as StatementEntry[];
       }
     } catch {
       // ignore parse errors
     }
-    setLoaded(true);
-  }, []);
+    return [];
+  });
+
+  const loaded = typeof window !== "undefined";
 
   useEffect(() => {
     if (loaded) {

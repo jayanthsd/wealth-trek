@@ -17,25 +17,25 @@ const defaultProfile: UserProfile = {
 };
 
 export function useUserProfile() {
-  const [profile, setProfile] = useState<UserProfile>(defaultProfile);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
+  const [profile, setProfile] = useState<UserProfile>(() => {
+    if (typeof window === "undefined") return defaultProfile;
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as UserProfile;
-        setProfile({
+        return {
           ...defaultProfile,
           ...parsed,
           certificateDate: parsed.certificateDate || todayString(),
-        });
+        };
       }
     } catch {
       // ignore
     }
-    setLoaded(true);
-  }, []);
+    return defaultProfile;
+  });
+
+  const loaded = typeof window !== "undefined";
 
   useEffect(() => {
     if (loaded) {

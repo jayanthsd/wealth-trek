@@ -68,7 +68,7 @@ export default function Pricing() {
                 Simple, transparent pricing
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                Choose the plan that's right for you. All plans include our core features.
+                Choose the plan that’s right for you. All plans include our core features.
               </p>
             </div>
 

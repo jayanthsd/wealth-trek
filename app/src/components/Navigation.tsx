@@ -10,7 +10,7 @@ export function Navigation() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link href="/" className="text-xl font-bold text-foreground hover:text-primary transition-colors">
-              Net Worth Certificate
+              Wealth Tracker
             </Link>
             <div className="hidden md:flex items-center gap-6">
               <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">

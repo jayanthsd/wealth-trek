@@ -38,6 +38,34 @@ export interface ExtractedEntry {
   closingBalance: number;
 }
 
+export interface NetWorthSnapshot {
+  id: string;
+  date: string;
+  totalAssets: number;
+  totalLiabilities: number;
+  netWorth: number;
+  entries: StatementEntry[];
+  createdAt: string;
+}
+
+export interface FinancialGoal {
+  id: string;
+  title: string;
+  description: string;
+  targetAmount?: number;
+  targetDate?: string;
+  createdAt: string;
+  status: "active" | "completed" | "paused";
+}
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  suggestedGoal?: Omit<FinancialGoal, "id" | "createdAt" | "status">;
+}
+
 export const STATEMENT_TYPE_PRESETS: StatementTypePreset[] = [
   { label: "Savings Bank Account", category: "asset" },
   { label: "Fixed Deposit", category: "asset" },
