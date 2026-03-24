@@ -60,12 +60,16 @@ The system SHALL require the closing balance to be a non-negative number.
 - **WHEN** user enters a negative closing balance
 - **THEN** the system SHALL display a validation error and prevent the entry from being saved
 
-### Requirement: Auto-save to localStorage
-The system SHALL automatically save all statement entries to browser localStorage whenever entries are added, edited, or deleted.
+### Requirement: Auto-save to server database
+The system SHALL automatically save all statement entries to the server-side SQLite database via API calls whenever entries are added, edited, or deleted, using the authenticated user's identity. Browser localStorage is no longer used for statement persistence.
 
 #### Scenario: Data persists across page refresh
 - **WHEN** user has added statement entries and refreshes the page
-- **THEN** the system SHALL restore all previously entered statement entries from localStorage
+- **THEN** the system SHALL restore all previously entered statement entries from the server database via API
+
+#### Scenario: Data accessible from another device
+- **WHEN** user has added statement entries on device A and opens the app on device B while signed in
+- **THEN** the system SHALL display all statement entries saved from device A
 
 ### Requirement: Extraction review accumulation
 The extraction review widget SHALL accumulate entries from multiple document extractions, displaying all extracted entries together in a single consolidated view rather than replacing previous extractions.

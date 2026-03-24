@@ -2,59 +2,79 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { StatementEntry } from "@/types";
-import { v4 as uuidv4 } from "uuid";
-
-const STORAGE_KEY = "nwc_statements";
 
 export function useStatements() {
-  const [statements, setStatements] = useState<StatementEntry[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored) as StatementEntry[];
-      }
-    } catch {
-      // ignore parse errors
-    }
-    return [];
-  });
-
-  const loaded = typeof window !== "undefined";
+  const [statements, setStatements] = useState<StatementEntry[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (loaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(statements));
-    }
-  }, [statements, loaded]);
+    let cancelled = false;
+    fetch("/api/statements")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch statements");
+        return res.json();
+      })
+      .then((data) => {
+        if (!cancelled) {
+          setStatements(data.statements);
+          setLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const addStatement = useCallback(
-    (entry: Omit<StatementEntry, "id">) => {
-      setStatements((prev) => [...prev, { ...entry, id: uuidv4() }]);
+    async (entry: Omit<StatementEntry, "id">) => {
+      const res = await fetch("/api/statements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry),
+      });
+      if (!res.ok) throw new Error("Failed to add statement");
+      const data = await res.json();
+      const created = data.statements[0] as StatementEntry;
+      setStatements((prev) => [...prev, created]);
     },
     []
   );
 
   const bulkAddStatements = useCallback(
-    (entries: Omit<StatementEntry, "id">[]) => {
-      setStatements((prev) => [
-        ...prev,
-        ...entries.map((entry) => ({ ...entry, id: uuidv4() })),
-      ]);
+    async (entries: Omit<StatementEntry, "id">[]) => {
+      const res = await fetch("/api/statements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entries),
+      });
+      if (!res.ok) throw new Error("Failed to bulk add statements");
+      const data = await res.json();
+      setStatements((prev) => [...prev, ...(data.statements as StatementEntry[])]);
     },
     []
   );
 
   const updateStatement = useCallback(
-    (id: string, updates: Partial<Omit<StatementEntry, "id">>) => {
+    async (id: string, updates: Partial<Omit<StatementEntry, "id">>) => {
+      const res = await fetch(`/api/statements/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error("Failed to update statement");
+      const data = await res.json();
+      const updated = data.statement as StatementEntry;
       setStatements((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
+        prev.map((s) => (s.id === id ? updated : s))
       );
     },
     []
   );
 
-  const deleteStatement = useCallback((id: string) => {
+  const deleteStatement = useCallback(async (id: string) => {
+    const res = await fetch(`/api/statements/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Failed to delete statement");
     setStatements((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
