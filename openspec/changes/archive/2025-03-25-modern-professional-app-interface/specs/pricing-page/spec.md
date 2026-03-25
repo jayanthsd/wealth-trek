@@ -1,10 +1,4 @@
-# Pricing Page
-
-## Purpose
-
-This specification defines the requirements for the Pricing page of the net worth certificate generator application, displaying subscription tiers and guiding users to sign up.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Pricing page displays subscription tiers
 The system SHALL display a Pricing page that shows available subscription tiers with their features and pricing information in a modern, grid-aligned layout optimized for readability across devices.
@@ -27,13 +21,6 @@ The system SHALL provide clear, scannable descriptions for each pricing tier exp
 #### Scenario: Tiers show pricing information
 - **WHEN** user views a pricing tier
 - **THEN** system displays price and billing frequency with emphasis styling that preserves clarity and accessibility
-
-### Requirement: Pricing page is publicly accessible
-The system SHALL allow access to the Pricing page without requiring authentication.
-
-#### Scenario: Anonymous user accesses pricing page
-- **WHEN** an unauthenticated user navigates to "/pricing"
-- **THEN** system displays the Pricing page without redirecting to sign-in
 
 ### Requirement: Pricing page includes call-to-action
 The system SHALL provide visually distinct and accessible call-to-action buttons for each pricing tier with immediate interaction feedback.

@@ -1,6 +1,17 @@
 import { Navigation } from "@/components/Navigation";
 import { SignUpButton } from "@clerk/nextjs";
-import { Check } from "lucide-react";
+import { Check, ShieldCheck, Zap, FileDown } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { IconBadge } from "@/components/ui/icon-badge";
 
 const pricingTiers = [
   {
@@ -59,120 +70,126 @@ export default function Pricing() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
+
       <main>
-        <section className="py-20 sm:py-24">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="mx-auto max-w-3xl text-center mb-16">
-              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+        <section className="relative overflow-hidden py-16 sm:py-24">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(79,70,229,0.14),transparent_40%),radial-gradient(circle_at_88%_14%,rgba(16,185,129,0.08),transparent_36%)]" />
+          <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center">
+              <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-[3.2rem] lg:leading-[1.06]">
                 Simple, transparent pricing
               </h1>
-              <p className="mt-4 text-lg text-muted-foreground">
-                Choose the plan that’s right for you. All plans include our core features.
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
+                Pick the plan that matches your needs. Every tier includes professional outputs, privacy-first handling, and guided wealth tracking.
               </p>
             </div>
 
-            <div className="mx-auto max-w-6xl">
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {pricingTiers.map((tier) => (
-                  <div
+                  <Card
                     key={tier.name}
-                    className={`relative rounded-2xl border ${
+                    className={`relative h-full ${
                       tier.highlighted
-                        ? "border-primary shadow-xl scale-105"
-                        : "border-border shadow-sm"
-                    } bg-card p-8 transition-all hover:shadow-lg`}
+                        ? "border-primary/60 ring-2 ring-primary/20 lg:-translate-y-1"
+                        : ""
+                    }`}
                   >
                     {tier.highlighted && (
                       <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                        <span className="inline-flex rounded-full bg-primary px-4 py-1 text-sm font-semibold text-white">
+                        <span className="inline-flex rounded-full bg-primary px-4 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-primary-foreground">
                           Most Popular
                         </span>
                       </div>
                     )}
 
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-foreground">
+                    <CardHeader className="text-center">
+                      <CardTitle className="heading-display text-2xl">
                         {tier.name}
-                      </h3>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {tier.description}
-                      </p>
-                      <div className="mt-6">
-                        <span className="text-5xl font-bold text-foreground">
+                      </CardTitle>
+                      <CardDescription>{tier.description}</CardDescription>
+                      <div className="pt-3">
+                        <span className="heading-display text-5xl tabular-nums text-foreground">
                           {tier.price}
                         </span>
-                        <span className="text-muted-foreground">
+                        <span className="text-sm text-muted-foreground">
                           /{tier.billing}
                         </span>
                       </div>
-                    </div>
+                    </CardHeader>
 
-                    <ul className="mt-8 space-y-4">
+                    <CardContent>
+                    <ul className="space-y-3">
                       {tier.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-3">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                            <Check className="h-4 w-4 text-primary" />
+                          <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
+                            <Check className="h-4 w-4 text-primary" aria-hidden />
                           </div>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-sm leading-relaxed text-muted-foreground">
                             {feature}
                           </span>
                         </li>
                       ))}
                     </ul>
+                    </CardContent>
 
-                    <div className="mt-8">
+                    <CardFooter className="mt-auto p-5">
                       <SignUpButton mode="modal">
-                        <button
-                          className={`w-full rounded-lg px-6 py-3 text-base font-semibold transition-all ${
+                        <Button
+                          size="lg"
+                          className={`tap-target w-full ${
                             tier.highlighted
-                              ? "bg-primary text-white shadow-lg hover:bg-primary/90 hover:shadow-xl"
-                              : "border border-input bg-background text-foreground hover:bg-accent"
+                              ? ""
+                              : "bg-background text-foreground hover:bg-accent"
                           }`}
+                          variant={tier.highlighted ? "default" : "outline"}
                         >
                           {tier.cta}
-                        </button>
+                        </Button>
                       </SignUpButton>
-                    </div>
-                  </div>
+                    </CardFooter>
+                  </Card>
                 ))}
               </div>
-            </div>
-
-            <div className="mx-auto max-w-3xl mt-16">
-              <div className="rounded-2xl border bg-card p-8 text-center">
-                <h3 className="text-xl font-semibold text-foreground">
-                  All plans include
-                </h3>
-                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div>
-                    <p className="font-medium text-foreground">🔒 Privacy First</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Your data stays in your browser
-                    </p>
+            <div className="mx-auto mt-12 max-w-4xl">
+              <Card className="relative overflow-hidden">
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(79,70,229,0.08),transparent_48%)]" />
+                <CardContent className="space-y-6 py-7 text-center">
+                  <h3 className="text-2xl font-semibold tracking-tight text-foreground">
+                    All plans include
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <IconBadge icon={ShieldCheck} label="Privacy First icon" className="mx-auto" tone="success" />
+                      <p className="font-medium text-foreground">Privacy First</p>
+                      <p className="text-sm text-muted-foreground">
+                        Your data stays in your browser
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <IconBadge icon={Zap} label="Fast Generation icon" className="mx-auto" tone="primary" />
+                      <p className="font-medium text-foreground">Fast Generation</p>
+                      <p className="text-sm text-muted-foreground">
+                        Certificates in minutes
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <IconBadge icon={FileDown} label="Professional PDFs icon" className="mx-auto" tone="warning" />
+                      <p className="font-medium text-foreground">Professional PDFs</p>
+                      <p className="text-sm text-muted-foreground">
+                        Official format certificates
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">⚡ Fast Generation</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Certificates in minutes
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">📄 Professional PDFs</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Official format certificates
-                    </p>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
 
-        <section className="border-t bg-gradient-to-b from-background to-primary/5 py-16">
-          <div className="container mx-auto px-4 sm:px-6">
+        <section className="border-t border-border/70 py-14 sm:py-20">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-2xl font-bold text-foreground">
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                 Frequently Asked Questions
               </h2>
               <div className="mt-8 space-y-6 text-left">
@@ -206,8 +223,8 @@ export default function Pricing() {
         </section>
       </main>
 
-      <footer className="border-t bg-card py-8">
-        <div className="container mx-auto px-4 sm:px-6">
+      <footer className="border-t bg-card/80 py-8">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Net Worth Certificate Generator</span>
             {" "}&mdash;{" "}

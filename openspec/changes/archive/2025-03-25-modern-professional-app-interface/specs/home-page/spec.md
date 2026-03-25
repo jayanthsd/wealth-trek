@@ -1,10 +1,4 @@
-# Home Page
-
-## Purpose
-
-This specification defines the requirements for the Home page of the net worth certificate generator application, serving as the landing page with product overview and user guidance.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Home page displays product overview
 The system SHALL display a Home page that serves as the landing page with product overview, key features, and value proposition for the networth certificate generator using a modern, minimalist, brand-consistent visual hierarchy.
@@ -27,13 +21,6 @@ The system SHALL provide clear, visually prominent, and accessible call-to-actio
 #### Scenario: CTA redirects to authentication
 - **WHEN** user clicks the sign-in call-to-action button
 - **THEN** system redirects to the Clerk sign-in page and provides visible interactive feedback during the action
-
-### Requirement: Home page is publicly accessible
-The system SHALL allow access to the Home page without requiring authentication.
-
-#### Scenario: Anonymous user accesses home page
-- **WHEN** an unauthenticated user navigates to "/"
-- **THEN** system displays the Home page without redirecting to sign-in
 
 ### Requirement: Home page includes navigation
 The system SHALL display a responsive navigation bar with links to public pages and authentication options, preserving brand consistency and mobile usability.
