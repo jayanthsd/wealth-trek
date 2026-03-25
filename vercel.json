@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd app && npm run build",
-  "outputDirectory": "app/.next",
+  "buildCommand": "cd app && npm install && npm run build",
   "installCommand": "cd app && npm install",
-  "framework": "nextjs",
-  "rootDirectory": "app"
+  "env": {
+    "NEXT_TELEMETRY_DISABLED": "1"
+  }
 }
