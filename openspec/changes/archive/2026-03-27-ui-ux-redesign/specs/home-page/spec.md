@@ -1,10 +1,4 @@
-# Home Page
-
-## Purpose
-
-This specification defines the requirements for the Home page of the net worth certificate generator application, serving as the landing page with glassmorphism design, animated charts, and modern UI/UX.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Home page displays product overview
 The system SHALL display a Home page with a glassmorphism gradient background, an animated hero section with the headline "Build your ₹1Cr journey with clarity, consistency, and confidence", a Recharts animated AreaChart showing net worth projection data, a social proof section ("Trusted by 10,000+ users" with avatar group), and feature cards — all with Framer Motion entrance animations.

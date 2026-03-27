@@ -1,10 +1,4 @@
-# Dashboard Hub
-
-## Purpose
-
-This specification defines the requirements for the dashboard hub that provides a comprehensive wealth tracking overview with personalized insights, charts, and navigation via a persistent sidebar.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Dashboard hub displays navigation cards
 The system SHALL display a card-based dashboard hub at `/dashboard` showing five navigation cards: Wealth Tracker, Net Worth Calculator, Analytics, Chat, and Goals — each with Framer Motion hover lift animation (shadow-xl + slight translateY) and staggered entrance animation.
@@ -32,6 +26,8 @@ The system SHALL display a card-based dashboard hub at `/dashboard` showing five
 #### Scenario: Goals card navigates to goals page
 - **WHEN** user clicks the "Goals" card
 - **THEN** the system SHALL navigate to `/dashboard/goals`
+
+## ADDED Requirements
 
 ### Requirement: Dashboard hub displays personalized header
 The system SHALL display a personalized greeting header with "Welcome back, [Name] 👋" and a subtext showing wealth growth summary (e.g., "Your wealth grew 3% this month") with Framer Motion entrance animation.

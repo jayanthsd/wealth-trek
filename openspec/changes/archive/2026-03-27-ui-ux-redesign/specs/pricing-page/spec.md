@@ -1,10 +1,4 @@
-# Pricing Page
-
-## Purpose
-
-This specification defines the requirements for the Pricing page of the net worth certificate generator application, displaying subscription tiers with monthly/yearly toggle, PricingCard components, and trust signals.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Pricing page displays subscription tiers
 The system SHALL display a Pricing page with three subscription tiers (Free, Professional, Enterprise) rendered using the `PricingCard` component, with the Professional tier highlighted via a "🔥 Most Popular" badge, gradient border, and slight default scale-up. The page SHALL be a `"use client"` component.
