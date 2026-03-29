@@ -1,5 +1,6 @@
 "use client"
 
+import { forwardRef } from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -43,7 +44,9 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
+const Button = forwardRef<HTMLButtonElement, ButtonPrimitive.Props & VariantProps<typeof buttonVariants> & {
+    loading?: boolean
+  }>(({
   className,
   variant = "default",
   size = "default",
@@ -51,12 +54,10 @@ function Button({
   loading = false,
   children,
   ...props
-}: ButtonPrimitive.Props &
-  VariantProps<typeof buttonVariants> & {
-    loading?: boolean
-  }) {
+}, ref) => {
   return (
     <ButtonPrimitive
+      ref={ref}
       data-slot="button"
       aria-busy={loading || undefined}
       disabled={disabled || loading}
@@ -72,6 +73,7 @@ function Button({
       {children}
     </ButtonPrimitive>
   )
-}
+})
+Button.displayName = "Button"
 
 export { Button, buttonVariants }

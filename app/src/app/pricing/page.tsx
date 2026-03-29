@@ -116,7 +116,7 @@ export default function Pricing() {
 
       <main>
         <section className="relative overflow-hidden py-16 sm:py-24">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(139,92,246,0.16),transparent_40%),radial-gradient(circle_at_88%_14%,rgba(16,185,129,0.08),transparent_36%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,oklch(0.78_0.12_80/0.16),transparent_40%),radial-gradient(circle_at_88%_14%,oklch(0.62_0.14_150/0.08),transparent_36%)]" />
           <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionContainer>
               <div className="mx-auto max-w-3xl text-center">
@@ -145,7 +145,7 @@ export default function Pricing() {
                   className="relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border border-border/60 bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   <span
-                    className={`pointer-events-none block h-5 w-5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 shadow-md transition-transform ${
+                    className={`pointer-events-none block h-5 w-5 rounded-full bg-gradient-to-r from-[oklch(0.78_0.12_80)] to-[oklch(0.65_0.15_45)] shadow-md transition-transform ${
                       isYearly ? "translate-x-6" : "translate-x-1"
                     }`}
                   />
@@ -154,7 +154,7 @@ export default function Pricing() {
                   className={`text-sm font-medium transition-colors ${isYearly ? "text-foreground" : "text-muted-foreground"}`}
                 >
                   Yearly
-                  <span className="ml-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                  <span className="ml-1.5 rounded-full bg-[oklch(0.78_0.12_80)]/10 px-2 py-0.5 text-xs font-semibold text-[oklch(0.78_0.12_80)] dark:bg-[oklch(0.78_0.12_80)]/20 dark:text-[oklch(0.78_0.12_80)]">
                     Save 17%
                   </span>
                 </span>
@@ -194,7 +194,7 @@ export default function Pricing() {
                         size="lg"
                         className={`w-full rounded-xl ${
                           tier.highlighted
-                            ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md hover:from-purple-600 hover:to-indigo-600"
+                            ? "bg-gradient-to-r from-[oklch(0.78_0.12_80)] to-[oklch(0.65_0.15_45)] text-primary-foreground shadow-md hover:opacity-90"
                             : ""
                         }`}
                         variant={tier.highlighted ? "default" : "outline"}
@@ -239,7 +239,7 @@ export default function Pricing() {
                           size="lg"
                           className={`w-full rounded-xl ${
                             tier.highlighted
-                              ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md hover:from-purple-600 hover:to-indigo-600"
+                              ? "bg-gradient-to-r from-[oklch(0.78_0.12_80)] to-[oklch(0.65_0.15_45)] text-primary-foreground shadow-md hover:opacity-90"
                               : ""
                           }`}
                           variant={tier.highlighted ? "default" : "outline"}
@@ -256,7 +256,7 @@ export default function Pricing() {
                     <div className="relative">
                       {isCurrentPlan && (
                         <div className="absolute -top-3 right-4 z-10">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-0.5 text-xs font-semibold text-white shadow-sm">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[oklch(0.78_0.12_80)] px-3 py-0.5 text-xs font-semibold text-primary-foreground shadow-sm">
                             <CheckCircle2 className="h-3 w-3" />
                             Current Plan
                           </span>
@@ -290,7 +290,7 @@ export default function Pricing() {
                   <div
                     className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm ${
                       checkoutResult.success
-                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                        ? "bg-[oklch(0.62_0.14_150)]/10 text-[oklch(0.62_0.14_150)] dark:bg-[oklch(0.62_0.14_150)]/20 dark:text-[oklch(0.62_0.14_150)]"
                         : checkoutResult.error === "Payment cancelled"
                           ? "bg-muted text-muted-foreground"
                           : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
@@ -334,7 +334,7 @@ export default function Pricing() {
             <SectionContainer delay={0.6}>
               <div className="mx-auto mt-12 max-w-4xl">
                 <Card className="relative overflow-hidden rounded-2xl shadow-lg">
-                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(139,92,246,0.08),transparent_48%)]" />
+                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,oklch(0.78_0.12_80/0.08),transparent_48%)]" />
                   <CardContent className="space-y-6 py-7 text-center">
                     <h3 className="text-2xl font-semibold tracking-tight text-foreground">
                       All plans include

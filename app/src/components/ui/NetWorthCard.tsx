@@ -12,11 +12,12 @@ interface NetWorthCardProps {
 }
 
 function formatINR(value: number): string {
-  return new Intl.NumberFormat("en-IN", {
+  const formatted = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(Math.abs(value));
+  return (value < 0 ? "- " : "") + formatted;
 }
 
 export function NetWorthCard({
@@ -31,29 +32,30 @@ export function NetWorthCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{
         y: -4,
+        scale: 1.02,
         transition: { duration: 0.2 },
       }}
       className={cn(
-        "rounded-2xl border border-border/60 bg-white/70 p-6 shadow-lg backdrop-blur-md transition-shadow hover:shadow-xl dark:bg-gray-900/70 sm:p-8",
+        "surface-card rounded-3xl p-6 sm:p-8 transition-shadow hover:shadow-glow",
         className
       )}
     >
-      <p className="text-sm font-medium text-muted-foreground">
+      <p className="text-xs font-semibold uppercase tracking-widest text-foreground/50">
         Total Net Worth
       </p>
-      <p className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+      <p className="mt-3 font-display italic text-4xl sm:text-5xl text-liquid-gold tabular-nums">
         {formatINR(netWorth)}
       </p>
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <span
           className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold",
+            "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium border",
             isPositive
-              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
-              : "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
+              ? "bg-success/10 text-success border-success/20"
+              : "bg-destructive/10 text-destructive border-destructive/20"
           )}
         >
           {isPositive ? (
@@ -61,13 +63,13 @@ export function NetWorthCard({
           ) : (
             <TrendingDown className="h-4 w-4" aria-hidden />
           )}
-          {isPositive ? "+" : ""}
-          {formatINR(monthlyChange)}
+          {isPositive ? "+" : "-"}
+          {formatINR(Math.abs(monthlyChange))}
         </span>
         <span
           className={cn(
-            "text-sm font-medium",
-            isPositive ? "text-emerald-600" : "text-red-600"
+            "text-sm font-medium italic opacity-80",
+            isPositive ? "text-success" : "text-destructive"
           )}
         >
           ({isPositive ? "+" : ""}

@@ -1,22 +1,29 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Manrope } from "next/font/google";
+import { Plus_Jakarta_Sans, Cormorant_Garamond, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
+const cormorantGaramond = Cormorant_Garamond({
+  variable: "--font-display",
+  subsets: ["latin"],
+  style: ["italic"],
+  weight: ["400", "500", "600", "700"],
+});
+
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Wealth Tracker",
-  description: "Track your net worth, analyze financial trends, and build wealth with AI-powered guidance",
+  title: "Wealth Trek | Midnight Ink",
+  description: "High-end personal balance sheet platform. Track your 1 Crore journey with clarity.",
 };
 
 export default function RootLayout({
@@ -25,14 +32,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${manrope.variable} ${geistMono.variable} antialiased`}
+        className={`${plusJakartaSans.variable} ${cormorantGaramond.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <ClerkProvider>
           {children}
+          <Analytics />
         </ClerkProvider>
-        <Analytics />
       </body>
     </html>
   );

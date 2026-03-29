@@ -3,7 +3,7 @@
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type GradientVariant = "purple" | "emerald" | "mixed";
+type GradientVariant = "gold" | "charcoal" | "mixed";
 
 interface GradientBackgroundProps {
   children: ReactNode;
@@ -13,12 +13,12 @@ interface GradientBackgroundProps {
 }
 
 const gradientMap: Record<GradientVariant, string> = {
-  purple:
-    "bg-[radial-gradient(circle_at_20%_0%,rgba(139,92,246,0.18),transparent_42%),radial-gradient(circle_at_85%_10%,rgba(99,102,241,0.12),transparent_36%)]",
-  emerald:
-    "bg-[radial-gradient(circle_at_20%_0%,rgba(16,185,129,0.16),transparent_42%),radial-gradient(circle_at_85%_10%,rgba(20,184,166,0.10),transparent_36%)]",
+  gold:
+    "bg-[radial-gradient(circle_at_20%_0%,oklch(0.78_0.12_80_/_0.15),transparent_50%),radial-gradient(circle_at_85%_10%,oklch(0.65_0.15_45_/_0.10),transparent_40%)]",
+  charcoal:
+    "bg-[radial-gradient(circle_at_20%_0%,oklch(0.18_0.008_60_/_0.2),transparent_50%),radial-gradient(circle_at_85%_10%,oklch(0.13_0.007_60_/_0.15),transparent_40%)]",
   mixed:
-    "bg-[radial-gradient(circle_at_20%_0%,rgba(139,92,246,0.16),transparent_42%),radial-gradient(circle_at_85%_10%,rgba(16,185,129,0.10),transparent_36%)]",
+    "bg-[radial-gradient(circle_at_20%_0%,oklch(0.78_0.12_80_/_0.12),transparent_50%),radial-gradient(circle_at_85%_10%,oklch(0.30_0.08_260_/_0.10),transparent_50%)]",
 };
 
 export function GradientBackground({
@@ -33,13 +33,13 @@ export function GradientBackground({
         className={cn(
           "pointer-events-none absolute inset-0",
           gradientMap[variant],
-          blur && "backdrop-blur-md"
+          blur && "backdrop-blur-3xl saturate-150"
         )}
       />
       <div
         className={cn(
           "relative",
-          blur && "bg-white/70 dark:bg-gray-900/70"
+          blur && "bg-background/80"
         )}
       >
         {children}

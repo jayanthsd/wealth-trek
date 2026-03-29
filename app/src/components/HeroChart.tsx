@@ -35,83 +35,90 @@ function formatLakhsCr(value: number): string {
 export function HeroChart() {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.7, delay: 0.3, ease: [0.21, 0.47, 0.32, 0.98] }}
-      className="rounded-2xl border border-border/60 bg-white/80 p-4 shadow-lg backdrop-blur-md dark:bg-gray-900/70 sm:p-6"
+      initial={{ opacity: 0, scale: 0.98, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="surface-card rounded-3xl p-6 sm:p-8 shadow-glow border border-white/5"
     >
-      <div className="mb-4 flex items-start justify-between gap-4">
+      <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-widest text-foreground/40">
             Net Worth Projection
           </p>
-          <p className="mt-1 text-xl font-semibold tracking-tight text-foreground">
-            Your path to 1Cr
-          </p>
+          <h3 className="mt-2 font-display italic text-2xl text-liquid-gold">
+            The 1 Crore Journey
+          </h3>
         </div>
-        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-          7-year view
+        <span className="rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+          Strategic View
         </span>
       </div>
-      <ResponsiveContainer width="100%" height={240}>
+      <ResponsiveContainer width="100%" height={280}>
         <AreaChart data={projectionData}>
           <defs>
             <linearGradient id="heroGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.02} />
+              <stop offset="0%" stopColor="oklch(0.78 0.12 80)" stopOpacity={0.35} />
+              <stop offset="95%" stopColor="oklch(0.78 0.12 80)" stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="currentColor"
-            strokeOpacity={0.08}
+            stroke="oklch(0.94 0.008 80)"
+            strokeOpacity={0.05}
             vertical={false}
           />
           <XAxis
             dataKey="year"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12, fill: "currentColor", opacity: 0.5 }}
+            tick={{ fontSize: 11, fill: "oklch(0.94 0.008 80)", opacity: 0.4, fontWeight: 500 }}
+            dy={10}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
             tickFormatter={formatLakhsCr}
-            tick={{ fontSize: 12, fill: "currentColor", opacity: 0.5 }}
-            width={48}
+            tick={{ fontSize: 11, fill: "oklch(0.94 0.008 80)", opacity: 0.4, fontWeight: 500 }}
+            width={40}
           />
           <Tooltip
-            formatter={(value) =>
+            cursor={{ stroke: 'oklch(0.78 0.12 80)', strokeWidth: 1, strokeDasharray: '4 4' }}
+            formatter={(value) => [
               new Intl.NumberFormat("en-IN", {
                 style: "currency",
                 currency: "INR",
                 maximumFractionDigits: 0,
-              }).format(Number(value ?? 0))
-            }
+              }).format(Number(value ?? 0)),
+              "Projected Net Worth"
+            ]}
             contentStyle={{
-              borderRadius: "12px",
-              border: "1px solid rgba(0,0,0,0.08)",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              fontSize: "13px",
+              backgroundColor: "oklch(0.13 0.007 60)",
+              borderRadius: "16px",
+              border: "1px solid oklch(0.78 0.12 80 / 0.2)",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+              fontSize: "12px",
+              color: "oklch(0.94 0.008 80)",
+              padding: "12px",
             }}
-            labelStyle={{ fontWeight: 600 }}
+            itemStyle={{ color: "oklch(0.78 0.12 80)", fontWeight: 600 }}
+            labelStyle={{ color: "oklch(0.94 0.008 80 / 0.5)", marginBottom: "4px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em" }}
           />
           <Area
             type="monotone"
             dataKey="netWorth"
-            stroke="#8B5CF6"
-            strokeWidth={3}
+            stroke="oklch(0.78 0.12 80)"
+            strokeWidth={2.5}
             fill="url(#heroGradient)"
-            animationDuration={1500}
-            animationEasing="ease-out"
+            animationDuration={2000}
+            animationEasing="ease-in-out"
             name="Net Worth"
           />
         </AreaChart>
       </ResponsiveContainer>
-      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-        Illustrative projection. Your dashboard reflects your real entries and
-        trends.
-      </p>
+      <div className="mt-6 flex items-center gap-2 text-[10px] text-foreground/30 uppercase tracking-[0.15em] font-medium italic">
+        <span className="h-1 w-1 rounded-full bg-primary" />
+        Interactive simulation based on target milestones
+      </div>
     </motion.div>
   );
 }

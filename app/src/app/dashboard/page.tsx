@@ -24,8 +24,11 @@ import {
   Plus,
   FileText,
   FlaskConical,
+  Sparkles,
+  ArrowRight,
   type LucideIcon,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,7 +60,7 @@ interface QuickAction {
 }
 
 // ---------------------------------------------------------------------------
-// Sample data — shown when the user has no real data yet
+// Constants
 // ---------------------------------------------------------------------------
 
 const SAMPLE_NET_WORTH = { netWorth: 2700000, monthlyChange: 78000, percentageChange: 3.0 };
@@ -78,17 +81,16 @@ const SAMPLE_INSIGHTS: InsightData[] = [
 ];
 
 const SAMPLE_GOALS: GoalDisplay[] = [
-  { name: "₹1Cr Net Worth", status: "active", targetAmount: 10000000, color: "from-purple-500 to-indigo-500" },
-  { name: "Emergency Fund", status: "active", targetAmount: 600000, color: "from-emerald-400 to-teal-500" },
-  { name: "Home Loan Payoff", status: "active", targetAmount: 2000000, color: "from-amber-400 to-orange-500" },
+  { name: "₹1Cr Net Worth", status: "active", targetAmount: 10000000, color: "from-primary to-primary/60" },
+  { name: "Emergency Fund", status: "active", targetAmount: 600000, color: "from-success to-success/60" },
+  { name: "Home Loan Payoff", status: "active", targetAmount: 2000000, color: "from-destructive to-destructive/60" },
 ];
 
 const GOAL_COLORS = [
-  "from-purple-500 to-indigo-500",
-  "from-emerald-400 to-teal-500",
-  "from-amber-400 to-orange-500",
-  "from-rose-400 to-pink-500",
-  "from-blue-400 to-cyan-500",
+  "from-primary to-primary/60",
+  "from-success to-success/60",
+  "from-destructive to-destructive/60",
+  "from-primary/80 to-primary/40",
 ];
 
 const quickActions: QuickAction[] = [
@@ -102,11 +104,12 @@ const quickActions: QuickAction[] = [
 // ---------------------------------------------------------------------------
 
 function formatINR(value: number): string {
-  return new Intl.NumberFormat("en-IN", {
+  const formatted = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(Math.abs(value));
+  return (value < 0 ? "- " : "") + formatted;
 }
 
 function formatLakhsCr(value: number): string {
@@ -131,9 +134,9 @@ function pctChange(prev: number, curr: number): number {
 
 function SampleBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
-      <FlaskConical className="h-3 w-3" aria-hidden />
-      Sample Data
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-primary italic">
+      <FlaskConical className="h-2.5 w-2.5" aria-hidden />
+      Simulation Mode
     </span>
   );
 }
@@ -229,7 +232,7 @@ export default function DashboardHub() {
   // --- Derived: user greeting -----------------------------------------------
   const firstName = profile.fullName
     ? profile.fullName.split(" ")[0]
-    : "there";
+    : "Member";
 
   // --- Derived: growth text in header ---------------------------------------
   const growthText = useMemo(() => {
@@ -243,45 +246,51 @@ export default function DashboardHub() {
   if (!allLoaded) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-muted-foreground">Loading your dashboard...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="font-display italic text-foreground/40">Synchronizing vault...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="space-y-10 px-4 py-10 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Header + Quick Actions */}
       <SectionContainer>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Welcome back, {firstName} 👋
+            <h1 className="font-display italic text-4xl text-foreground sm:text-5xl">
+              Welcome back, {firstName}
             </h1>
             {growthText ? (
-              <p className="mt-1 text-muted-foreground">
-                Your wealth {growthText.positive ? "grew" : "dipped"}{" "}
+              <p className="mt-2 text-foreground/50 italic font-display text-lg">
+                Your wealth {growthText.positive ? "ascended" : "receded"}{" "}
                 <span
-                  className={`font-semibold ${growthText.positive ? "text-emerald-600" : "text-red-600"}`}
+                  className={cn(
+                    "font-semibold not-italic tabular-nums",
+                    growthText.positive ? "text-success" : "text-destructive"
+                  )}
                 >
                   {growthText.pct}%
                 </span>{" "}
-                since last snapshot
+                this period.
               </p>
             ) : (
-              <p className="mt-1 text-muted-foreground">
-                Start tracking to see your wealth trend here.
+              <p className="mt-2 text-foreground/50 italic font-display text-lg">
+                Begin your documentation to visualize your trajectory.
               </p>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {quickActions.map((action) => (
               <Link key={action.label} href={action.href}>
                 <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-white/70 px-4 py-2 text-sm font-semibold text-foreground shadow-sm backdrop-blur-md transition-shadow hover:shadow-md dark:bg-gray-900/70"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="surface-card group inline-flex items-center gap-3 rounded-2xl px-5 py-3 text-xs font-bold uppercase tracking-widest text-foreground/60 transition-all hover:text-primary hover:border-primary/30"
                 >
-                  <action.icon className="h-4 w-4" aria-hidden />
+                  <action.icon className="h-4 w-4 text-primary/50 group-hover:text-primary transition-colors" aria-hidden />
                   {action.label}
                 </motion.button>
               </Link>
@@ -291,180 +300,187 @@ export default function DashboardHub() {
       </SectionContainer>
 
       {/* Top row: Net Worth + Goals  |  Chart */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-5">
         {/* Left column */}
-        <SectionContainer delay={0.1} className="xl:col-span-2">
-          <div className="flex h-full flex-col gap-6">
-            <div className="relative">
-              {!hasSnapshots && (
-                <div className="absolute right-4 top-4 z-10">
-                  <SampleBadge />
-                </div>
-              )}
-              <NetWorthCard
-                netWorth={netWorthData.netWorth}
-                monthlyChange={netWorthData.monthlyChange}
-                percentageChange={netWorthData.percentageChange}
-              />
-            </div>
-
-            {/* Goals */}
-            <Card className="relative flex-1 rounded-2xl p-5 shadow-lg">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Goals
-                </h2>
-                {!hasGoals && <SampleBadge />}
+        <SectionContainer delay={0.1} className="xl:col-span-2 space-y-8">
+          <div className="relative group">
+            {!hasSnapshots && (
+              <div className="absolute right-6 top-6 z-10">
+                <SampleBadge />
               </div>
-              {goalsDisplay.length > 0 ? (
-                <div className="space-y-3.5">
-                  {goalsDisplay.map((goal) => (
-                    <div key={goal.name}>
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-sm font-medium text-foreground">
-                          {goal.name}
+            )}
+            <NetWorthCard
+              netWorth={netWorthData.netWorth}
+              monthlyChange={netWorthData.monthlyChange}
+              percentageChange={netWorthData.percentageChange}
+              className="shadow-glow"
+            />
+          </div>
+
+          {/* Goals */}
+          <div className="surface-card rounded-3xl p-6 sm:p-8 border border-white/5 relative">
+            <div className="mb-8 flex items-center justify-between">
+              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">
+                Milestones
+              </h2>
+              {!hasGoals && <SampleBadge />}
+            </div>
+            {goalsDisplay.length > 0 ? (
+              <div className="space-y-6">
+                {goalsDisplay.map((goal) => (
+                  <div key={goal.name} className="group/goal">
+                    <div className="mb-2.5 flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground/80 group-hover/goal:text-primary transition-colors">
+                        {goal.name}
+                      </span>
+                      {goal.targetAmount && (
+                        <span className="text-[10px] font-bold tabular-nums text-foreground/30">
+                          {formatLakhsCr(goal.targetAmount)}
                         </span>
-                        {goal.targetAmount && (
-                          <span className="text-xs font-semibold text-muted-foreground">
-                            {formatLakhsCr(goal.targetAmount)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{
-                            width: goal.targetAmount && hasSnapshots
-                              ? `${Math.min(Math.round((netWorthData.netWorth / goal.targetAmount) * 100), 100)}%`
-                              : hasGoals
-                                ? "0%"
-                                : `${Math.min(Math.round((SAMPLE_NET_WORTH.netWorth / (goal.targetAmount ?? 1)) * 100), 100)}%`,
-                          }}
-                          transition={{
-                            duration: 1,
-                            delay: 0.3,
-                            ease: [0.21, 0.47, 0.32, 0.98],
-                          }}
-                          className={`h-full rounded-full bg-gradient-to-r ${goal.color}`}
-                        />
-                      </div>
+                      )}
                     </div>
-                  ))}
-                  {hasGoals && (
-                    <Link
-                      href="/dashboard/goals"
-                      className="mt-2 block text-xs font-medium text-purple-600 hover:underline"
-                    >
-                      View all goals →
-                    </Link>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No active goals.{" "}
-                  <Link href="/dashboard/chat" className="font-medium text-purple-600 hover:underline">
-                    Chat with your advisor
-                  </Link>{" "}
-                  to set one.
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5 border border-white/5">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        whileInView={{
+                          width: goal.targetAmount && hasSnapshots
+                            ? `${Math.min(Math.round((netWorthData.netWorth / goal.targetAmount) * 100), 100)}%`
+                            : hasGoals
+                              ? "0%"
+                              : `${Math.min(Math.round((SAMPLE_NET_WORTH.netWorth / (goal.targetAmount ?? 1)) * 100), 100)}%`,
+                        }}
+                        viewport={{ once: true }}
+                        transition={{
+                          duration: 1.5,
+                          delay: 0.5,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className={cn("h-full rounded-full bg-gradient-to-r shadow-[0_0_10px_rgba(198,165,88,0.2)]", goal.color)}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {hasGoals && (
+                  <Link
+                    href="/dashboard/goals"
+                    className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary transition-colors"
+                  >
+                    Manage All Goals <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="py-4 text-center">
+                <p className="text-sm text-foreground/40 italic font-display mb-4">
+                  Define your targets to activate tracking.
                 </p>
-              )}
-            </Card>
+                <Link href="/dashboard/chat">
+                   <button className="text-[10px] font-bold uppercase tracking-widest text-primary border border-primary/20 px-4 py-2 rounded-full hover:bg-primary/5 transition-colors">
+                      Consult Advisor
+                   </button>
+                </Link>
+              </div>
+            )}
           </div>
         </SectionContainer>
 
         {/* Right column — Chart */}
         <SectionContainer delay={0.2} className="xl:col-span-3">
-          <Card className="relative h-full rounded-2xl p-5 shadow-lg sm:p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Assets vs Liabilities
+          <div className="surface-card h-full rounded-3xl p-6 sm:p-8 border border-white/5 shadow-glow relative">
+            <div className="mb-10 flex items-center justify-between">
+              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">
+                Growth Allocation
               </h2>
               {isChartSample && <SampleBadge />}
             </div>
-            <ResponsiveContainer width="100%" height={340}>
-              <LineChart data={chartData}>
+            <ResponsiveContainer width="100%" height={360}>
+              <LineChart data={chartData} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="currentColor"
-                  strokeOpacity={0.08}
+                  stroke="oklch(0.94 0.008 80)"
+                  strokeOpacity={0.05}
                   vertical={false}
                 />
                 <XAxis
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: "currentColor", opacity: 0.5 }}
+                  tick={{ fontSize: 11, fill: "oklch(0.94 0.008 80)", opacity: 0.4, fontWeight: 500 }}
+                  dy={15}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={formatLakhsCr}
-                  tick={{ fontSize: 12, fill: "currentColor", opacity: 0.5 }}
-                  width={48}
+                  tick={{ fontSize: 11, fill: "oklch(0.94 0.008 80)", opacity: 0.4, fontWeight: 500 }}
+                  width={40}
                 />
                 <Tooltip
-                  formatter={(value) =>
-                    new Intl.NumberFormat("en-IN", {
-                      style: "currency",
-                      currency: "INR",
-                      maximumFractionDigits: 0,
-                    }).format(Number(value ?? 0))
-                  }
+                  cursor={{ stroke: 'oklch(0.78 0.12 80)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  formatter={(value) => [formatINR(Number(value ?? 0)), ""]}
                   contentStyle={{
-                    borderRadius: "12px",
-                    border: "1px solid rgba(0,0,0,0.08)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                    fontSize: "13px",
+                    backgroundColor: "oklch(0.13 0.007 60)",
+                    borderRadius: "16px",
+                    border: "1px solid oklch(0.78 0.12 80 / 0.2)",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                    fontSize: "12px",
+                    color: "oklch(0.94 0.008 80)",
+                    padding: "12px",
                   }}
-                  labelStyle={{ fontWeight: 600 }}
+                  labelStyle={{ color: "oklch(0.94 0.008 80 / 0.5)", marginBottom: "4px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em" }}
                 />
-                <Legend />
+                <Legend 
+                  verticalAlign="top" 
+                  align="right" 
+                  iconType="circle"
+                  wrapperStyle={{ paddingTop: "0px", paddingBottom: "30px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, opacity: 0.7 }}
+                />
                 <Line
                   type="monotone"
                   dataKey="assets"
-                  stroke="#10B981"
-                  strokeWidth={3}
-                  dot={false}
+                  stroke="oklch(0.62 0.14 150)"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: "oklch(0.62 0.14 150)", strokeWidth: 0 }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
                   name="Assets"
-                  animationDuration={1200}
-                  animationEasing="ease-out"
+                  animationDuration={1500}
                 />
                 <Line
                   type="monotone"
                   dataKey="liabilities"
-                  stroke="#F59E0B"
-                  strokeWidth={3}
-                  dot={false}
+                  stroke="oklch(0.65 0.15 45)"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: "oklch(0.65 0.15 45)", strokeWidth: 0 }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
                   name="Liabilities"
-                  animationDuration={1200}
-                  animationEasing="ease-out"
+                  animationDuration={1500}
                 />
               </LineChart>
             </ResponsiveContainer>
             {isChartSample && (
-              <p className="mt-3 text-xs text-muted-foreground">
-                Save at least 2 snapshots in the{" "}
-                <Link href="/dashboard/calculator" className="font-medium text-purple-600 hover:underline">
-                  Calculator
-                </Link>{" "}
-                to see your real trend here.
-              </p>
+              <div className="mt-8 flex items-center gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                 <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                 <p className="text-[10px] text-primary/70 font-bold uppercase tracking-widest leading-relaxed">
+                   Enter real data in the <Link href="/dashboard/calculator" className="underline">Calculator</Link> to unlock personalized velocity projections.
+                 </p>
+              </div>
             )}
-          </Card>
+          </div>
         </SectionContainer>
       </div>
 
       {/* Insights row */}
       <SectionContainer delay={0.3}>
-        <div className="mb-3 flex items-center gap-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Insights
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">
+            Intelligence Feed
           </h2>
+          <div className="h-px flex-1 mx-6 bg-white/5" />
           {isInsightsSample && <SampleBadge />}
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           {insightsData.map((insight, index) => (
-            <SectionContainer key={insight.title} delay={0.35 + index * 0.08}>
+            <SectionContainer key={insight.title} delay={0.35 + index * 0.1}>
               <InsightCard
                 title={insight.title}
                 description={insight.description}

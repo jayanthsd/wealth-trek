@@ -1,27 +1,100 @@
 "use client";
 
-import { type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { type ReactNode, useRef } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 
 interface AnimatedHeroProps {
   children: ReactNode;
 }
 
 export function AnimatedHero({ children }: AnimatedHeroProps) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
   return (
-    <section className="relative overflow-hidden py-16 sm:py-24">
-      {/* Glassmorphism gradient backdrop */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(139,92,246,0.18),transparent_42%),radial-gradient(circle_at_85%_10%,rgba(99,102,241,0.12),transparent_36%)]" />
-      <div className="pointer-events-none absolute inset-0 backdrop-blur-[2px]" />
+    <section ref={ref} className="relative overflow-hidden py-20 sm:py-32">
+      {/* Atmospheric Glow Blobs */}
+      <motion.div 
+        style={{ y, opacity }}
+        className="pointer-events-none absolute inset-0 z-0"
+      >
+        <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute bottom-[10%] left-[-5%] h-[400px] w-[400px] rounded-full bg-primary/5 blur-[100px]" />
+      </motion.div>
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
+        transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
       >
         {children}
       </motion.div>
     </section>
+  );
+}
+
+export function ProductReveal({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+
+  const rotateX = useTransform(scrollYProgress, [0, 0.4], [35, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.4], [0.8, 1]);
+
+  const springRotateX = useSpring(rotateX, { stiffness: 100, damping: 30 });
+  const springScale = useSpring(scale, { stiffness: 100, damping: 30 });
+
+  return (
+    <div ref={ref} className="perspective-1000 py-20 px-4">
+      <motion.div
+        style={{
+          rotateX: springRotateX,
+          scale: springScale,
+          opacity: 1,
+        }}
+        className="mx-auto w-full max-w-6xl rounded-[4rem] border-4 border-[#c6a558] bg-[#0a0a0a] shadow-[0_0_80px_rgba(198,165,88,0.3)] preserve-3d"
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+export function CardReveal({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "center center"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], [100, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 0.6], [0, 1]);
+  const scale = useTransform(scrollYProgress, [0, 1], [0.85, 1]);
+
+  const springY = useSpring(y, { stiffness: 80, damping: 25 });
+  const springScale = useSpring(scale, { stiffness: 80, damping: 25 });
+
+  return (
+    <div ref={ref}>
+      <motion.div
+        style={{
+          y: springY,
+          scale: springScale,
+          opacity,
+        }}
+      >
+        {children}
+      </motion.div>
+    </div>
   );
 }
 
@@ -38,12 +111,13 @@ export function AnimatedTextBlock({
 }: AnimatedTextBlockProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
       transition={{
-        duration: 0.5,
+        duration: 0.8,
         delay,
-        ease: [0.21, 0.47, 0.32, 0.98],
+        ease: [0.22, 1, 0.36, 1],
       }}
       className={className}
     >
@@ -57,12 +131,13 @@ interface AnimatedCTAButtonProps {
   className?: string;
 }
 
-export function AnimatedCTAButton({ children, className }: AnimatedCTAButtonProps) {
+export function AnimatedCTAButton({ children, className, ...props }: AnimatedCTAButtonProps & any) {
   return (
     <motion.div
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.05, y: -2 }}
+      whileTap={{ scale: 0.95 }}
       className={className}
+      {...props}
     >
       {children}
     </motion.div>

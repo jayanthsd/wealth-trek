@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { Show, UserButton, RedirectToSignIn } from "@clerk/nextjs";
+import { UserButton, RedirectToSignIn, Show } from "@clerk/nextjs";
 import { useAuth } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 
@@ -15,7 +14,10 @@ export default function DashboardLayout({
   if (!isLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="font-display italic text-foreground/40">Securing environment...</p>
+        </div>
       </div>
     );
   }
@@ -29,22 +31,22 @@ export default function DashboardLayout({
       <DashboardSidebar />
 
       <div className="flex flex-1 flex-col">
-        {/* Compact top bar */}
-        <header className="flex h-16 shrink-0 items-center justify-end border-b border-border/60 bg-white/80 px-6 backdrop-blur-md dark:bg-gray-950/80">
-          <div className="flex items-center gap-4">
+        {/* Midnight Ink Header */}
+        <header className="flex h-20 shrink-0 items-center justify-end border-b border-white/5 surface-dark-glass px-6 lg:px-10">
+          <div className="flex items-center gap-6">
             <Show when="signed-in">
-              <Link
-                href="/"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Home
-              </Link>
-              <UserButton />
+              <UserButton appearance={{
+                elements: {
+                  userButtonAvatarBox: "h-9 w-9 border border-white/10 hover:border-primary/50 transition-colors"
+                }
+              }} />
             </Show>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-background/50">
+          {children}
+        </main>
       </div>
     </div>
   );
