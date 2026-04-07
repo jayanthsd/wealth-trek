@@ -1,15 +1,11 @@
 import { Navigation } from "@/components/Navigation";
 import { SignUpButton } from "@clerk/nextjs";
-import { ArrowRight, BarChart3, FileDown, Lock, MessageCircle, Target, TrendingUp, Sparkles } from "lucide-react";
+import { ArrowRight, BarChart3, FileDown, Lock, MessageCircle, Target, TrendingUp, PlusCircle, Lightbulb } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { IconBadge } from "@/components/ui/icon-badge";
-import { HeroChart } from "@/components/HeroChart";
-import { AnimatedHero, AnimatedTextBlock, AnimatedCTAButton, ProductReveal, CardReveal } from "@/components/AnimatedHero";
+import { AnimatedTextBlock, AnimatedCTAButton, CardReveal } from "@/components/AnimatedHero";
 import { SectionContainer } from "@/components/ui/SectionContainer";
 import { FeatureCard } from "@/components/FeatureCard";
-import { Area, AreaChart, ResponsiveContainer } from "recharts";
+import { WealthTrekLogo } from "@/components/WealthTrekLogo";
 
 const featureCards = [
   {
@@ -57,7 +53,31 @@ const featureCards = [
 ];
 
 
-function DashboardMockup() {
+const howItWorksSteps = [
+  {
+    number: "01",
+    Icon: PlusCircle,
+    title: "Add your assets",
+    description:
+      "Log your savings, investments, real estate, and liabilities. Everything in one structured place, always current.",
+  },
+  {
+    number: "02",
+    Icon: TrendingUp,
+    title: "Watch your net worth",
+    description:
+      "See your total net worth update with each entry. Track growth month by month with clear, visual timelines.",
+  },
+  {
+    number: "03",
+    Icon: Lightbulb,
+    title: "Get insights",
+    description:
+      "Understand what your money is doing and what it should be doing. Observations that drive action, not just numbers.",
+  },
+];
+
+function OldDashboardMockup_Unused() {
   const sidebarItems = [
     { name: "Overview", icon: "grid", active: true },
     { name: "Wealth Tracker", icon: "lineChart", active: false },
@@ -129,7 +149,7 @@ function DashboardMockup() {
                 <span className="text-[10px] font-bold tracking-widest text-gray-500">TOTAL NET WORTH</span>
               </div>
               <div className="space-y-1">
-                <span className="text-4xl font-bold text-white font-display">₹20,00,000</span>
+                <span className="text-4xl font-medium text-brand-gradient font-display">₹20,00,000</span>
               </div>
               <div className="flex items-center gap-4 text-xs">
                 <span className="text-emerald-500 flex items-center gap-1">
@@ -271,158 +291,156 @@ function DashboardMockup() {
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navigation />
 
       <main>
-        <AnimatedHero>
-          <div className="grid items-center gap-y-12 lg:grid-cols-12 lg:gap-16">
-            <div className="space-y-8 lg:col-span-6">
-              <AnimatedTextBlock delay={0.1}>
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-                  <Sparkles className="h-3 w-3" />
-                  Professional wealth tracking
-                </div>
-              </AnimatedTextBlock>
+        {/* ─── Hero ─── */}
+        <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden py-16 sm:py-20">
+          <div className="pointer-events-none absolute inset-0 -z-0" aria-hidden>
+            <div className="absolute left-1/2 top-1/3 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-[120px]" />
+            <div className="absolute bottom-0 right-0 h-[240px] w-[240px] rounded-full bg-accent/5 blur-[90px]" />
+          </div>
 
-              <AnimatedTextBlock delay={0.2}>
-                <h1 className="text-balance text-5xl font-medium tracking-tight sm:text-6xl lg:text-[4.2rem] lg:leading-[1]">
-                  Build your <span className="text-warm-gold italic font-display">1 Crore journey</span> with clarity.
-                </h1>
-              </AnimatedTextBlock>
+          <div className="relative z-10 mx-auto w-full max-w-3xl px-4 text-center sm:px-6">
+            <AnimatedTextBlock delay={0}>
+              <div className="mb-6 flex justify-center">
+                <WealthTrekLogo size={56} className="text-primary" />
+              </div>
+            </AnimatedTextBlock>
 
-              <AnimatedTextBlock delay={0.3}>
-                <p className="max-w-2xl text-lg leading-relaxed text-foreground/60 italic font-display sm:text-xl">
-                  A private, high-fidelity workspace designed for precision wealth management. Track assets, visualize growth, and command your financial future.
-                </p>
-              </AnimatedTextBlock>
+            <AnimatedTextBlock delay={0.1}>
+              <p className="label-caps mb-4">
+                Wealth Trek
+              </p>
+            </AnimatedTextBlock>
 
-              <AnimatedTextBlock delay={0.4}>
-                <div className="flex flex-wrap items-center gap-4">
+            <AnimatedTextBlock delay={0.2}>
+              <h1 className="text-balance text-5xl font-bold leading-[1.1] tracking-tight sm:text-6xl lg:text-7xl">
+                Wealth, measured{" "}
+                <span className="text-brand-gradient">with intention.</span>
+              </h1>
+            </AnimatedTextBlock>
+
+            <AnimatedTextBlock delay={0.3}>
+              <p className="mt-5 text-xl font-medium text-foreground/80 sm:text-2xl">
+                Your money has a story. Here&apos;s what it&apos;s saying.
+              </p>
+            </AnimatedTextBlock>
+
+            <AnimatedTextBlock delay={0.4}>
+              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-foreground/75">
+                Wealth isn&apos;t just a number — it&apos;s a reflection of every decision
+                you&apos;ve made. We help you read it clearly, track it consistently, and
+                understand what it should be doing for you.
+              </p>
+            </AnimatedTextBlock>
+
+            <AnimatedTextBlock delay={0.5}>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <AnimatedCTAButton>
+                  <SignUpButton mode="modal">
+                    <button className="inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition-all hover:scale-105 active:scale-95">
+                      Start Your Journey
+                      <ArrowRight aria-hidden className="h-4 w-4" />
+                    </button>
+                  </SignUpButton>
+                </AnimatedCTAButton>
+                <Link href="/pricing" className="inline-flex">
                   <AnimatedCTAButton>
-                    <SignUpButton mode="modal">
-                      <button className="min-h-14 rounded-full bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
-                        Create Private Account
-                        <ArrowRight aria-hidden className="h-4 w-4" />
-                      </button>
-                    </SignUpButton>
+                    <button className="min-h-12 rounded-full border border-border bg-background px-7 text-sm font-medium text-foreground/70 transition-all hover:border-primary/30 hover:text-foreground">
+                      View Pricing
+                    </button>
                   </AnimatedCTAButton>
-                  <Link href="/pricing" className="inline-flex">
-                    <AnimatedCTAButton>
-                      <button className="min-h-14 rounded-full border border-white/10 bg-white/5 px-8 text-sm font-medium text-foreground transition-all hover:bg-white/10">
-                        View Pricing
-                      </button>
-                    </AnimatedCTAButton>
-                  </Link>
-                </div>
-              </AnimatedTextBlock>
+                </Link>
+              </div>
+            </AnimatedTextBlock>
+          </div>
+        </section>
 
-              <AnimatedTextBlock delay={0.5}>
-                <div className="flex items-center gap-4 pt-4">
-                  <div className="flex -space-x-3">
-                    {[
-                      { initials: "AS", color: "bg-[oklch(0.78_0.12_80)]" },
-                      { initials: "RK", color: "bg-[oklch(0.75_0.10_75)]" },
-                      { initials: "PM", color: "bg-[oklch(0.78_0.12_80)]" },
-                      { initials: "SJ", color: "bg-[oklch(0.75_0.10_75)]" },
-                      { initials: "NK", color: "bg-[oklch(0.75_0.10_75)]" }
-                    ].map((user, i) => (
-                      <div
-                        key={i}
-                        className={`h-10 w-10 rounded-full border-2 border-background ${user.color} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 hover:z-10`}
-                      >
-                        <span className="text-[10px] font-bold text-white uppercase tracking-widest">
-                          {user.initials}
+        {/* ─── How it works ─── */}
+        <section className="py-16 sm:py-20 border-t border-border/40">
+          <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
+            <SectionContainer>
+              <div className="mb-12 text-center">
+                <p className="label-caps mb-3">
+                  How it works
+                </p>
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  Three steps to clarity.
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-6">
+                {howItWorksSteps.map(({ number, Icon, title, description }, idx) => (
+                  <CardReveal key={number}>
+                    <div className="relative flex flex-col items-center text-center">
+                      {idx < howItWorksSteps.length - 1 && (
+                        <div
+                          className="absolute hidden sm:block top-7 left-[calc(50%+2.5rem)] right-0 h-px bg-gradient-to-r from-primary/30 to-transparent"
+                          aria-hidden
+                        />
+                      )}
+                      <div className="relative z-10 mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-primary/20 bg-background shadow-sm">
+                        <Icon className="h-5 w-5 text-primary" aria-hidden />
+                        <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                          {number}
                         </span>
                       </div>
-                    ))}
-                  </div>
-                  <p className="text-sm text-foreground/50">
-                    <span className="font-semibold text-foreground uppercase tracking-widest text-xs">Trusted by 10,000+</span>
-                    <br />individuals tracking milestones
-                  </p>
-                </div>
-              </AnimatedTextBlock>
-            </div>
-
-            <div className="lg:col-span-6 relative">
-              <div className="absolute -inset-4 bg-primary/5 blur-3xl rounded-full" />
-              <HeroChart />
-            </div>
+                      <h3 className="mb-2 text-base font-semibold text-foreground">
+                        {title}
+                      </h3>
+                      <p className="text-sm leading-relaxed text-foreground/55">
+                        {description}
+                      </p>
+                    </div>
+                  </CardReveal>
+                ))}
+              </div>
+            </SectionContainer>
           </div>
-        </AnimatedHero>
+        </section>
 
-        <section className="py-24 sm:py-32">
+        {/* ─── Feature cards ─── */}
+        <section className="py-16 sm:py-20 border-t border-border/40">
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionContainer>
-              <div className="text-center space-y-6 mb-20">
-                <h2 className="text-balance text-4xl font-medium tracking-tight sm:text-5xl font-display italic">
-                  Precision <span className="text-warm-gold">Productivity</span>
-                </h2>
-                <p className="mx-auto max-w-2xl text-lg text-foreground/50 italic font-display">
-                  Everything you need to command your personal balance sheet.
+              <div className="mb-10 text-center">
+                <p className="label-caps mb-3">
+                  What you get
                 </p>
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  Everything you need to{" "}
+                  <span className="text-brand-gradient">track your wealth.</span>
+                </h2>
               </div>
             </SectionContainer>
 
-            <ProductReveal>
-              <DashboardMockup />
-            </ProductReveal>
-
-            <div className="mt-32 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {featureCards.map((feature, index) => (
                 <CardReveal key={index}>
                   <FeatureCard
                     title={feature.title}
                     description={feature.description}
                     icon={feature.icon}
-                    delay={0.1 * index}
+                    delay={0.05 * index}
                   />
                 </CardReveal>
               ))}
             </div>
           </div>
         </section>
-
-        <section className="py-24 sm:py-32 border-t border-white/5">
-          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-            <ProductReveal>
-              <div className="relative surface-card rounded-[3rem] p-12 sm:p-20 overflow-hidden text-center border border-white/5">
-                <div className="absolute top-0 right-0 h-96 w-96 bg-primary/5 blur-[100px] -mr-48 -mt-48" />
-                <div className="absolute bottom-0 left-0 h-64 w-64 bg-primary/3 blur-[80px] -ml-32 -mb-32" />
-                <div className="relative z-10 space-y-8">
-                  <h2 className="text-balance text-5xl font-medium tracking-tight sm:text-6xl font-display italic">
-                    Start your <span className="text-warm-gold">private journey</span> today.
-                  </h2>
-                  <p className="mx-auto max-w-2xl text-xl text-foreground/50 italic font-display">
-                    Secure your financial future with the tools designed for clarity and long-term success.
-                  </p>
-                  <div className="pt-4">
-                    <AnimatedCTAButton>
-                      <SignUpButton mode="modal">
-                        <button className="min-h-16 rounded-full bg-primary px-12 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:scale-105 active:scale-95">
-                          Create Private Account
-                        </button>
-                      </SignUpButton>
-                    </AnimatedCTAButton>
-                  </div>
-                </div>
-              </div>
-            </ProductReveal>
-          </div>
-        </section>
       </main>
 
-      <footer className="border-t border-white/5 bg-background py-12">
+      <footer className="border-t border-border/40 bg-background py-8">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-3">
-              <span className="font-display italic text-2xl text-foreground">Wealth Trek</span>
-              <span className="h-1 w-1 rounded-full bg-primary/50" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/30">Midnight Ink Edition</span>
+              <WealthTrekLogo size={32} className="text-foreground/40" />
+              <span className="text-lg font-semibold text-foreground/50">Wealth Trek</span>
             </div>
-            <p className="text-sm text-foreground/40 italic font-display">
-              &copy; 2026 Wealth Trek. All rights reserved. 🔒 Private by design.
+            <p className="text-sm text-foreground/35">
+              &copy; 2026 Wealth Trek. All rights reserved.
             </p>
           </div>
         </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Cormorant_Garamond, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from "@vercel/analytics/react";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -22,8 +23,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Wealth Trek | Midnight Ink",
-  description: "High-end personal balance sheet platform. Track your 1 Crore journey with clarity.",
+  title: "Wealth Trek — Wealth, measured with intention.",
+  description: "Your money has a story. Track it clearly, consistently, and understand what it should be doing for you.",
 };
 
 export default function RootLayout({
@@ -32,14 +33,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${plusJakartaSans.variable} ${cormorantGaramond.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        <ClerkProvider>
-          {children}
-          <Analytics />
-        </ClerkProvider>
+        <ThemeProvider>
+          <ClerkProvider
+            signInFallbackRedirectUrl="/dashboard"
+            signUpFallbackRedirectUrl="/dashboard"
+            afterSignOutUrl="/"
+          >
+            {children}
+            <Analytics />
+          </ClerkProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

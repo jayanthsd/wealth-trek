@@ -60,8 +60,8 @@ export function InsightCard({
           <TrendIcon className={cn("h-5 w-5", config?.color || "text-primary")} aria-hidden />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">{title}</h3>
-          <p className="mt-1 text-sm leading-relaxed text-foreground/60 italic font-display">
+          <h3 className="label-caps !text-foreground !mb-0">{title}</h3>
+          <p className="mt-2 text-[0.95rem] leading-relaxed text-foreground/80">
             {description}
           </p>
         </div>

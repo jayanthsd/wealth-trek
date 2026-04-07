@@ -20,6 +20,8 @@ interface StatementFormProps {
   onUpdate?: (id: string, updates: Partial<Omit<StatementEntry, "id">>) => void;
   editingEntry?: StatementEntry | null;
   onCancelEdit?: () => void;
+  defaultCategory?: Category;
+  compact?: boolean;
 }
 
 const emptyForm = {
@@ -35,9 +37,20 @@ export function StatementForm({
   onUpdate,
   editingEntry,
   onCancelEdit,
+  defaultCategory,
+  compact = false,
 }: StatementFormProps) {
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(() => ({
+    ...emptyForm,
+    category: defaultCategory ?? ("asset" as Category),
+  }));
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!editingEntry && defaultCategory) {
+      setForm((prev) => ({ ...prev, category: defaultCategory }));
+    }
+  }, [defaultCategory, editingEntry]);
 
   useEffect(() => {
     if (editingEntry) {
@@ -107,21 +120,9 @@ export function StatementForm({
     onCancelEdit?.();
   }
 
-  return (
-    <Card className={editingEntry ? "border-primary/30 ring-2 ring-primary/10" : ""}>
-      <CardHeader className="pb-4">
-        <div className="flex items-center gap-2">
-          <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${editingEntry ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary"}`}>
-            {editingEntry ? <Edit3 className="h-4 w-4" /> : <PlusCircle className="h-4 w-4" />}
-          </div>
-          <CardTitle className="text-lg font-semibold">
-            {editingEntry ? "Edit Statement" : "Add Statement"}
-          </CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2">
+  const fields = (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="space-y-2">
             <Label>
               Statement Type <span className="text-destructive">*</span>
             </Label>
@@ -216,26 +217,44 @@ export function StatementForm({
             )}
           </div>
 
-          <div className="flex items-end gap-2">
-            <Button onClick={handleSubmit} className="flex-1">
-              {editingEntry ? (
-                <>
-                  <Save className="mr-2 h-4 w-4" /> Update
-                </>
-              ) : (
-                <>
-                  <Plus className="mr-2 h-4 w-4" /> Add
-                </>
-              )}
-            </Button>
-            {editingEntry && (
-              <Button variant="outline" onClick={handleCancel}>
-                <X className="mr-2 h-4 w-4" /> Cancel
-              </Button>
-            )}
+      <div className="flex items-center gap-2 pt-2 sm:col-span-2">
+        <Button onClick={handleSubmit} className="flex-1">
+          {editingEntry ? (
+            <>
+              <Save className="mr-2 h-4 w-4" /> Update
+            </>
+          ) : (
+            <>
+              <Plus className="mr-2 h-4 w-4" /> Add
+            </>
+          )}
+        </Button>
+        {(editingEntry || compact) && (
+          <Button variant="outline" onClick={handleCancel}>
+            <X className="mr-2 h-4 w-4" /> Cancel
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
+  if (compact) {
+    return <div className="py-2">{fields}</div>;
+  }
+
+  return (
+    <Card className={editingEntry ? "border-primary/30 ring-2 ring-primary/10" : ""}>
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-2">
+          <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${editingEntry ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary"}`}>
+            {editingEntry ? <Edit3 className="h-4 w-4" /> : <PlusCircle className="h-4 w-4" />}
           </div>
+          <CardTitle className="text-lg font-semibold">
+            {editingEntry ? "Edit Statement" : "Add Statement"}
+          </CardTitle>
         </div>
-      </CardContent>
+      </CardHeader>
+      <CardContent>{fields}</CardContent>
     </Card>
   );
 }

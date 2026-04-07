@@ -4,6 +4,7 @@ import { useNetWorthHistory } from "@/hooks/useNetWorthHistory";
 import { NetWorthSnapshot, StatementEntry } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DashboardPageShell } from "@/components/DashboardPageShell";
 import {
   BarChart,
   Bar,
@@ -185,8 +186,8 @@ export default function AnalyticsPage() {
 
   if (snapshots.length < 2) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground mb-2">
+      <DashboardPageShell variant="wide" className="space-y-6">
+        <h1 className="text-4xl font-semibold text-brand-gradient mb-2">
           Analytics
         </h1>
         <Card className="flex flex-col items-center justify-center p-12 text-center">
@@ -198,11 +199,11 @@ export default function AnalyticsPage() {
             You need at least 2 net worth snapshots to see analytics. Currently
             you have {snapshots.length}.
           </p>
-          <Link href="/dashboard/calculator">
-            <Button>Go to Net Worth Calculator</Button>
+          <Link href="/dashboard/snapshot">
+            <Button>Go to Snapshot</Button>
           </Link>
         </Card>
-      </div>
+      </DashboardPageShell>
     );
   }
 
@@ -243,9 +244,9 @@ export default function AnalyticsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 space-y-8">
+    <DashboardPageShell variant="wide" className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        <h1 className="text-4xl font-semibold text-brand-gradient">
           Analytics
         </h1>
         <p className="mt-1 text-muted-foreground">
@@ -257,9 +258,9 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         <Card className="p-6">
-          <p className="text-sm text-muted-foreground">Net Worth Change</p>
+          <p className="label-caps mb-1">Net Worth Change</p>
           <p
-            className={`text-2xl font-bold mt-1 ${
+            className={`text-2xl font-semibold mt-1 ${
               netWorthChange >= 0 ? "text-emerald-600" : "text-red-600"
             }`}
           >
@@ -275,8 +276,8 @@ export default function AnalyticsPage() {
           </p>
         </Card>
         <Card className="p-6">
-          <p className="text-sm text-muted-foreground">Assets Change</p>
-          <p className="text-2xl font-bold mt-1 text-emerald-600">
+          <p className="label-caps mb-1">Assets Change</p>
+          <p className="text-2xl font-semibold mt-1 text-emerald-600">
             {formatCurrency(latest.totalAssets)}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
@@ -284,8 +285,8 @@ export default function AnalyticsPage() {
           </p>
         </Card>
         <Card className="p-6">
-          <p className="text-sm text-muted-foreground">Liabilities Change</p>
-          <p className="text-2xl font-bold mt-1 text-amber-600">
+          <p className="label-caps mb-1">Liabilities Change</p>
+          <p className="text-2xl font-semibold mt-1 text-amber-600">
             {formatCurrency(latest.totalLiabilities)}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
@@ -296,7 +297,7 @@ export default function AnalyticsPage() {
 
       {topMovements.length > 0 && (
         <Card className="p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">
+          <h2 className="label-caps !text-lg !mb-4">
             Top Movements
           </h2>
           <div className="space-y-3">
@@ -366,7 +367,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {assetPieData.length > 0 && (
           <Card className="p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">
+            <h2 className="label-caps !text-lg !mb-4">
               Asset Breakdown
             </h2>
             <ResponsiveContainer width="100%" height={300}>
@@ -377,9 +378,21 @@ export default function AnalyticsPage() {
                   cy="50%"
                   outerRadius={100}
                   dataKey="value"
-                  label={(props: PieLabelRenderProps) =>
-                    `${String(props.name ?? "")} (${((Number(props.percent ?? 0)) * 100).toFixed(0)}%)`
-                  }
+                  label={(props) => (
+                    <text
+                      x={props.x}
+                      y={props.y}
+                      fill="var(--muted-foreground)"
+                      textAnchor={props.textAnchor}
+                      dominantBaseline={props.dominantBaseline}
+                      fontSize={10}
+                      fontWeight={600}
+                      fontFamily="var(--font-sans)"
+                      opacity={0.6}
+                    >
+                      {`${String(props.name ?? "")} (${((Number(props.percent ?? 0)) * 100).toFixed(0)}%)`}
+                    </text>
+                  )}
                   labelLine
                 >
                   {assetPieData.map((_, index) => (
@@ -389,14 +402,26 @@ export default function AnalyticsPage() {
                     />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => formatCurrency(Number(value ?? 0))} />
+                <Tooltip 
+                  formatter={(value) => formatCurrency(Number(value ?? 0))}
+                  contentStyle={{
+                    backgroundColor: "var(--card)",
+                    borderRadius: "16px",
+                    border: "1px solid var(--border)",
+                    boxShadow: "var(--shadow-soft)",
+                    fontSize: "12px",
+                    fontFamily: "var(--font-sans)",
+                    color: "var(--card-foreground)",
+                    padding: "12px",
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </Card>
         )}
         {liabilityPieData.length > 0 && (
           <Card className="p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">
+            <h2 className="label-caps !text-lg !mb-4">
               Liability Breakdown
             </h2>
             <ResponsiveContainer width="100%" height={300}>
@@ -407,9 +432,21 @@ export default function AnalyticsPage() {
                   cy="50%"
                   outerRadius={100}
                   dataKey="value"
-                  label={(props: PieLabelRenderProps) =>
-                    `${String(props.name ?? "")} (${((Number(props.percent ?? 0)) * 100).toFixed(0)}%)`
-                  }
+                  label={(props) => (
+                    <text
+                      x={props.x}
+                      y={props.y}
+                      fill="var(--muted-foreground)"
+                      textAnchor={props.textAnchor}
+                      dominantBaseline={props.dominantBaseline}
+                      fontSize={10}
+                      fontWeight={600}
+                      fontFamily="var(--font-sans)"
+                      opacity={0.6}
+                    >
+                      {`${String(props.name ?? "")} (${((Number(props.percent ?? 0)) * 100).toFixed(0)}%)`}
+                    </text>
+                  )}
                   labelLine
                 >
                   {liabilityPieData.map((_, index) => (
@@ -419,12 +456,24 @@ export default function AnalyticsPage() {
                     />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => formatCurrency(Number(value ?? 0))} />
+                <Tooltip 
+                  formatter={(value) => formatCurrency(Number(value ?? 0))}
+                  contentStyle={{
+                    backgroundColor: "var(--card)",
+                    borderRadius: "16px",
+                    border: "1px solid var(--border)",
+                    boxShadow: "var(--shadow-soft)",
+                    fontSize: "12px",
+                    fontFamily: "var(--font-sans)",
+                    color: "var(--card-foreground)",
+                    padding: "12px",
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </Card>
         )}
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }

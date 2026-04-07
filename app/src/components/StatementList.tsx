@@ -13,19 +13,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { Pencil, Trash2, TrendingUp, TrendingDown, Wallet, Plus } from "lucide-react";
 
 interface StatementListProps {
   statements: StatementEntry[];
   onEdit: (entry: StatementEntry) => void;
   onDelete: (id: string) => void;
+  onAddAsset?: () => void;
+  onAddLiability?: () => void;
 }
 
-export function StatementList({ statements, onEdit, onDelete }: StatementListProps) {
+export function StatementList({ statements, onEdit, onDelete, onAddAsset, onAddLiability }: StatementListProps) {
   const assets = statements.filter((s) => s.category === "asset");
   const liabilities = statements.filter((s) => s.category === "liability");
 
-  function renderTable(entries: StatementEntry[], title: string, isAsset: boolean) {
+  function renderTable(entries: StatementEntry[], title: string, isAsset: boolean, onAdd?: () => void) {
     const Icon = isAsset ? TrendingUp : TrendingDown;
     const iconBgColor = isAsset ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-600";
     const valueColor = isAsset ? "text-emerald-600" : "text-rose-600";
@@ -33,18 +35,26 @@ export function StatementList({ statements, onEdit, onDelete }: StatementListPro
     return (
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-2">
-            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBgColor}`}>
-              <Icon className="h-4 w-4" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBgColor}`}>
+                <Icon className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-lg font-semibold">
+                {title}
+                {entries.length > 0 && (
+                  <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-sm font-normal text-muted-foreground">
+                    {entries.length}
+                  </span>
+                )}
+              </CardTitle>
             </div>
-            <CardTitle className="text-lg font-semibold">
-              {title}
-              {entries.length > 0 && (
-                <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-sm font-normal text-muted-foreground">
-                  {entries.length}
-                </span>
-              )}
-            </CardTitle>
+            {onAdd && (
+              <Button variant="outline" size="sm" onClick={onAdd} className="h-8 gap-1.5 text-xs">
+                <Plus className="h-3.5 w-3.5" />
+                Add {isAsset ? "Asset" : "Liability"}
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -54,7 +64,7 @@ export function StatementList({ statements, onEdit, onDelete }: StatementListPro
                 <Wallet className="h-6 w-6 text-muted-foreground" />
               </div>
               <p className="text-sm font-medium text-muted-foreground">No {title.toLowerCase()} added yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Add your first {isAsset ? "asset" : "liability"} using the form above</p>
+              <p className="text-xs text-muted-foreground mt-1">Click the button above to add your first {isAsset ? "asset" : "liability"}</p>
             </div>
           ) : (
             <div className="overflow-x-auto rounded-lg border">
@@ -118,8 +128,8 @@ export function StatementList({ statements, onEdit, onDelete }: StatementListPro
 
   return (
     <div className="space-y-6">
-      {renderTable(assets, "Assets", true)}
-      {renderTable(liabilities, "Liabilities", false)}
+      {renderTable(assets, "Assets", true, onAddAsset)}
+      {renderTable(liabilities, "Liabilities", false, onAddLiability)}
     </div>
   );
 }

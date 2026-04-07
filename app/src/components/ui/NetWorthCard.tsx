@@ -43,10 +43,10 @@ export function NetWorthCard({
         className
       )}
     >
-      <p className="text-xs font-semibold uppercase tracking-widest text-foreground/50">
+      <p className="label-caps">
         Total Net Worth
       </p>
-      <p className="mt-3 font-display italic text-4xl sm:text-5xl text-liquid-gold tabular-nums">
+      <p className="mt-3 text-4xl sm:text-5xl font-semibold text-foreground tabular-nums">
         {formatINR(netWorth)}
       </p>
       <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -68,7 +68,7 @@ export function NetWorthCard({
         </span>
         <span
           className={cn(
-            "text-sm font-medium italic opacity-80",
+            "text-sm font-medium",
             isPositive ? "text-success" : "text-destructive"
           )}
         >

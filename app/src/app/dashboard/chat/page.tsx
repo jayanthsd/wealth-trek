@@ -7,6 +7,7 @@ import { useFinancialGoals } from "@/hooks/useFinancialGoals";
 import { ChatMessage, FinancialGoal } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DashboardPageShell } from "@/components/DashboardPageShell";
 import { Send, MessageCircle, RotateCcw, Target } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -180,120 +181,125 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col px-4 py-6 sm:px-6" style={{ height: "calc(100vh - 73px)" }}>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Financial Advisor
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Chat with your AI financial advisor
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={clearHistory}
-          disabled={isStreaming || messages.length === 0}
-        >
-          <RotateCcw className="mr-2 h-4 w-4" />
-          New Conversation
-        </Button>
-      </div>
-
-      <Card className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <MessageCircle className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <h2 className="text-lg font-semibold text-foreground mb-2">
-                Start a conversation
-              </h2>
-              <p className="text-muted-foreground max-w-sm">
-                Ask about wealth building, financial planning, debt management,
-                or get help setting financial goals.
-              </p>
-            </div>
-          )}
-          {messages.map((msg) => (
-            <div key={msg.id}>
-              <div
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground"
-                  }`}
-                >
-                  <div className="whitespace-pre-wrap">{
-                    msg.role === "assistant"
-                      ? extractGoalFromContent(msg.content).cleanContent
-                      : msg.content
-                  }</div>
-                </div>
-              </div>
-              {msg.role === "assistant" && msg.suggestedGoal && (
-                <div className="ml-2 mt-2">
-                  <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-                    <Target className="h-4 w-4 text-amber-600" />
-                    <span className="text-sm font-medium text-amber-800">
-                      Goal: {msg.suggestedGoal.title}
-                    </span>
-                    {savedGoalIds.has(msg.id) ? (
-                      <span className="text-xs text-emerald-600 font-medium">
-                        Saved!
-                      </span>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-100"
-                        onClick={() => handleSaveGoal(msg.id, msg.suggestedGoal)}
-                      >
-                        Save as Goal
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-          {isStreaming && (
-            <div className="flex justify-start">
-              <div className="flex items-center gap-1 rounded-2xl bg-muted px-4 py-3">
-                <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40" style={{ animationDelay: "0ms" }} />
-                <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40" style={{ animationDelay: "150ms" }} />
-                <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40" style={{ animationDelay: "300ms" }} />
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className="border-t p-4">
-          <div className="flex gap-2">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask about your finances..."
-              rows={1}
-              className="flex-1 resize-none rounded-xl border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              disabled={isStreaming}
-            />
-            <Button
-              onClick={handleSend}
-              disabled={!input.trim() || isStreaming}
-              className="h-auto rounded-xl px-4"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+    <DashboardPageShell variant="wide" className="py-6">
+      <div className="flex flex-col gap-4" style={{ height: "calc(100vh - 73px)" }}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-4xl font-semibold text-brand-gradient">
+              Financial Advisor
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Chat with your AI financial advisor
+            </p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearHistory}
+            disabled={isStreaming || messages.length === 0}
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            New Conversation
+          </Button>
         </div>
-      </Card>
-    </div>
+
+        <Card className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <MessageCircle className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                <h2 className="text-xl font-semibold text-foreground mb-2">
+                  Start a conversation
+                </h2>
+                <p className="text-muted-foreground max-w-sm">
+                  Ask about wealth building, financial planning, debt management,
+                  or get help setting financial goals.
+                </p>
+              </div>
+            )}
+            {messages.map((msg) => {
+              const content =
+                msg.role === "assistant"
+                  ? extractGoalFromContent(msg.content).cleanContent
+                  : msg.content;
+
+              return (
+                <div key={msg.id}>
+                  <div
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                        msg.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-foreground"
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap">{content}</div>
+                    </div>
+                  </div>
+                  {msg.role === "assistant" && msg.suggestedGoal && (
+                    <div className="ml-2 mt-2">
+                      <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                        <Target className="h-4 w-4 text-amber-600" />
+                        <span className="text-sm font-medium text-amber-800">
+                          Goal: {msg.suggestedGoal.title}
+                        </span>
+                        {savedGoalIds.has(msg.id) ? (
+                          <span className="text-xs text-emerald-600 font-medium">
+                            Saved!
+                          </span>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-100"
+                            onClick={() => handleSaveGoal(msg.id, msg.suggestedGoal)}
+                          >
+                            Save as Goal
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {isStreaming && (
+              <div className="flex justify-start">
+                <div className="flex items-center gap-1 rounded-2xl bg-muted px-4 py-3">
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40" style={{ animationDelay: "0ms" }} />
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40" style={{ animationDelay: "150ms" }} />
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40" style={{ animationDelay: "300ms" }} />
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="border-t p-4">
+            <div className="flex gap-2">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask about your finances..."
+                rows={1}
+                className="flex-1 resize-none rounded-xl border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                disabled={isStreaming}
+              />
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || isStreaming}
+                className="h-auto rounded-xl px-4"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </DashboardPageShell>
   );
 }

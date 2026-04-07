@@ -6,17 +6,17 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp,
-  Calculator,
+  ClipboardEdit,
   BarChart3,
   MessageCircle,
   Target,
   LayoutDashboard,
   Menu,
   X,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WealthTrekLogo } from "./WealthTrekLogo";
 
 interface NavItem {
   label: string;
@@ -27,32 +27,12 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Wealth Tracker", href: "/dashboard/wealth-tracker", icon: TrendingUp },
-  { label: "Calculator", href: "/dashboard/calculator", icon: Calculator },
+  { label: "Snapshot", href: "/dashboard/snapshot", icon: ClipboardEdit },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { label: "Chat", href: "/dashboard/chat", icon: MessageCircle },
   { label: "Goals", href: "/dashboard/goals", icon: Target },
 ];
 
-function WaveMark() {
-  return (
-    <svg 
-      width="20" 
-      height="12" 
-      viewBox="0 0 22 14" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-      className="text-primary"
-    >
-      <path 
-        d="M1 7C3.5 2 6.5 2 8 7C9.5 12 12.5 12 14 7C15.5 2 18.5 2 21 7" 
-        stroke="currentColor" 
-        strokeWidth="3" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 export function DashboardSidebar() {
   const pathname = usePathname();
@@ -98,8 +78,8 @@ export function DashboardSidebar() {
             className="flex items-center gap-3"
             onClick={() => setMobileOpen(false)}
           >
-            <WaveMark />
-            <span className="font-display italic text-xl text-foreground tracking-tight">Wealth Trek</span>
+            <WealthTrekLogo size={60} className="text-primary" />
+            <span className="text-2xl font-bold tracking-tight text-foreground">Wealth Trek</span>
           </Link>
           <button
             type="button"
@@ -128,7 +108,7 @@ export function DashboardSidebar() {
                   "group relative flex items-center gap-4 rounded-2xl px-4 py-3.5 text-sm font-medium transition-all duration-300",
                   isActive
                     ? "text-primary"
-                    : "text-foreground/50 hover:text-foreground hover:bg-white/5"
+                    : "text-foreground/70 hover:text-foreground hover:bg-white/5"
                 )}
               >
                 {isActive && (
@@ -157,11 +137,14 @@ export function DashboardSidebar() {
         </nav>
 
         {/* Sidebar footer */}
-        <div className="border-t border-white/5 px-6 py-6">
-          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/30 italic">
-            <Sparkles className="h-3 w-3 text-primary/50" />
-            Private Edition 2026
+        <div className="border-t border-white/5 px-6 py-5">
+          <div className="flex items-center gap-2">
+            <WealthTrekLogo size={24} className="text-foreground/40" />
+            <span className="text-base font-semibold text-foreground/50">Wealth Trek</span>
           </div>
+          <p className="mt-2 text-xs text-foreground/25">
+            &copy; 2026 Wealth Trek. All rights reserved.
+          </p>
         </div>
       </aside>
     </>

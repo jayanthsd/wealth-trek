@@ -4,6 +4,7 @@ import { useFinancialGoals } from "@/hooks/useFinancialGoals";
 import { FinancialGoal } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DashboardPageShell } from "@/components/DashboardPageShell";
 import {
   Target,
   Trash2,
@@ -44,8 +45,8 @@ export default function GoalsPage() {
 
   if (goals.length === 0) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground mb-2">
+      <DashboardPageShell variant="wide" className="space-y-6">
+        <h1 className="text-4xl font-semibold text-brand-gradient mb-2">
           Financial Goals
         </h1>
         <Card className="flex flex-col items-center justify-center p-12 text-center">
@@ -64,7 +65,7 @@ export default function GoalsPage() {
             </Button>
           </Link>
         </Card>
-      </div>
+      </DashboardPageShell>
     );
   }
 
@@ -74,10 +75,10 @@ export default function GoalsPage() {
   const sortedGoals = [...activeGoals, ...pausedGoals, ...completedGoals];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 space-y-8">
+    <DashboardPageShell variant="wide" className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-4xl font-semibold text-brand-gradient">
             Financial Goals
           </h1>
           <p className="mt-1 text-muted-foreground">
@@ -103,7 +104,7 @@ export default function GoalsPage() {
           />
         ))}
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }
 

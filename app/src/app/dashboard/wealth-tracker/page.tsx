@@ -5,6 +5,7 @@ import { useNetWorthHistory } from "@/hooks/useNetWorthHistory";
 import { NetWorthSnapshot } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DashboardPageShell } from "@/components/DashboardPageShell";
 import {
   LineChart,
   Line,
@@ -37,7 +38,7 @@ export default function WealthTrackerPage() {
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm font-medium text-foreground/40 italic font-display">Accessing private ledger...</p>
+          <p className="text-sm font-medium text-foreground/40">Accessing private ledger...</p>
         </div>
       </div>
     );
@@ -45,8 +46,8 @@ export default function WealthTrackerPage() {
 
   if (snapshots.length === 0) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        <h1 className="font-display italic text-3xl text-foreground mb-6">
+      <DashboardPageShell variant="wide" className="space-y-6">
+        <h1 className="text-4xl font-semibold text-brand-gradient mb-6">
           Wealth Tracker
         </h1>
         <Card className="flex flex-col items-center justify-center p-16 text-center border-dashed border-white/10">
@@ -56,16 +57,16 @@ export default function WealthTrackerPage() {
           <h2 className="text-xl font-semibold text-foreground mb-3">
             Initial Snapshot Pending
           </h2>
-          <p className="text-foreground/50 mb-8 max-w-md italic font-display">
+          <p className="text-foreground/50 mb-8 max-w-md">
             Begin your journey by documenting your current assets and liabilities. Your growth story starts with the first entry.
           </p>
-          <Link href="/dashboard/calculator">
+          <Link href="/dashboard/snapshot">
             <button className="min-h-12 rounded-full bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:scale-105 active:scale-95">
-              Launch Calculator
+              Open Snapshot
             </button>
           </Link>
         </Card>
-      </div>
+      </DashboardPageShell>
     );
   }
 
@@ -81,40 +82,39 @@ export default function WealthTrackerPage() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 space-y-10">
+    <DashboardPageShell variant="wide" className="space-y-10">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="font-display italic text-4xl text-liquid-gold">
+          <h1 className="text-4xl font-semibold text-brand-gradient">
             Wealth Tracker
           </h1>
-          <p className="mt-2 text-foreground/50 italic font-display">
+          <p className="mt-2 text-foreground/50">
             A comprehensive overview of your financial velocity.
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-2 rounded-full bg-primary/5 border border-primary/10 px-4 py-1.5">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Live Insights</span>
+          <span className="label-caps !text-primary">Live Insights</span>
         </div>
       </div>
 
       <div className="surface-card rounded-3xl p-6 sm:p-8 border border-white/5 shadow-glow">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-foreground/40 mb-8">
+        <h2 className="label-caps mb-8">
           Net Worth Trend
         </h2>
-        <ResponsiveContainer width="100%" height={380}>
-          <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.94 0.008 80)" strokeOpacity={0.05} vertical={false} />
+        <ResponsiveContainer width="100%" height={340}>
+          <LineChart data={chartData} margin={{ top: 0, right: 16, left: 4, bottom: 24 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.8} vertical={false} />
             <XAxis 
               dataKey="date" 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11, fill: "oklch(0.94 0.008 80)", opacity: 0.4, fontWeight: 500 }}
-              dy={15}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 500, fontFamily: "var(--font-sans)" }}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11, fill: "oklch(0.94 0.008 80)", opacity: 0.4, fontWeight: 500 }}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 500, fontFamily: "var(--font-sans)" }}
               tickFormatter={(v: number) =>
                 new Intl.NumberFormat("en-IN", {
                   notation: "compact",
@@ -125,24 +125,25 @@ export default function WealthTrackerPage() {
               width={40}
             />
             <Tooltip
-              cursor={{ stroke: 'oklch(0.78 0.12 80)', strokeWidth: 1, strokeDasharray: '4 4' }}
+              cursor={{ stroke: 'var(--primary)', strokeWidth: 1, strokeDasharray: '4 4', opacity: 0.4 }}
               formatter={(value) => [formatCurrency(Number(value ?? 0)), ""]}
               contentStyle={{
-                backgroundColor: "oklch(0.13 0.007 60)",
+                backgroundColor: "var(--card)",
                 borderRadius: "16px",
-                border: "1px solid oklch(0.78 0.12 80 / 0.2)",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                border: "1px solid var(--border)",
+                boxShadow: "var(--shadow-soft)",
                 fontSize: "12px",
-                color: "oklch(0.94 0.008 80)",
+                fontFamily: "var(--font-sans)",
+                color: "var(--card-foreground)",
                 padding: "12px",
               }}
-              labelStyle={{ color: "oklch(0.94 0.008 80 / 0.5)", marginBottom: "4px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em" }}
+              labelStyle={{ color: "var(--muted-foreground)", marginBottom: "4px", fontSize: "10px", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.1em" }}
             />
             <Legend 
               verticalAlign="top" 
               align="right" 
               iconType="circle"
-              wrapperStyle={{ paddingTop: "0px", paddingBottom: "30px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, opacity: 0.7 }}
+              wrapperStyle={{ paddingTop: "0px", paddingBottom: "30px", fontSize: "10px", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, opacity: 0.7 }}
             />
             <Line
               type="monotone"
@@ -176,7 +177,7 @@ export default function WealthTrackerPage() {
       </div>
 
       <div className="surface-card rounded-3xl p-6 sm:p-8 border border-white/5">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-foreground/40 mb-8">
+        <h2 className="label-caps mb-8">
           Snapshot History
         </h2>
         <div className="overflow-x-auto -mx-6 sm:mx-0">
@@ -208,7 +209,7 @@ export default function WealthTrackerPage() {
           </table>
         </div>
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }
 
@@ -255,7 +256,7 @@ function SnapshotRow({
         <td className="py-4 px-4 text-right text-destructive font-semibold tabular-nums">
           {formatCurrency(snapshot.totalLiabilities)}
         </td>
-        <td className="py-4 px-4 text-right font-display italic text-lg text-liquid-gold tabular-nums">
+        <td className="py-4 px-4 text-right font-semibold text-foreground tabular-nums">
           {formatCurrency(snapshot.netWorth)}
         </td>
         <td className="py-4 px-4 text-right rounded-r-2xl">
@@ -281,7 +282,7 @@ function SnapshotRow({
                     Asset Distribution ({assets.length})
                   </h4>
                   {assets.length === 0 ? (
-                    <p className="text-sm text-foreground/30 italic">No asset entries detected.</p>
+                    <p className="text-sm text-foreground/30">No asset entries detected.</p>
                   ) : (
                     <ul className="space-y-2">
                       {assets.map((entry) => (
@@ -309,7 +310,7 @@ function SnapshotRow({
                     Liability Portfolio ({liabilities.length})
                   </h4>
                   {liabilities.length === 0 ? (
-                    <p className="text-sm text-foreground/30 italic">No liabilities recorded.</p>
+                    <p className="text-sm text-foreground/30">No liabilities recorded.</p>
                   ) : (
                     <ul className="space-y-2">
                       {liabilities.map((entry) => (

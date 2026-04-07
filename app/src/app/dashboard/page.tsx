@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
 import { NetWorthCard } from "@/components/ui/NetWorthCard";
 import { InsightCard } from "@/components/ui/InsightCard";
 import { SectionContainer } from "@/components/ui/SectionContainer";
+import { DashboardPageShell } from "@/components/DashboardPageShell";
 import { useNetWorthHistory } from "@/hooks/useNetWorthHistory";
 import { useFinancialGoals } from "@/hooks/useFinancialGoals";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { FirstSnapshotOnboarding } from "@/components/FirstSnapshotOnboarding";
 import {
   LineChart,
   Line,
@@ -23,7 +24,6 @@ import {
 import {
   Plus,
   FileText,
-  FlaskConical,
   Sparkles,
   ArrowRight,
   type LucideIcon,
@@ -63,28 +63,7 @@ interface QuickAction {
 // Constants
 // ---------------------------------------------------------------------------
 
-const SAMPLE_NET_WORTH = { netWorth: 2700000, monthlyChange: 78000, percentageChange: 3.0 };
-
-const SAMPLE_CHART: ChartDataPoint[] = [
-  { month: "Jul", assets: 2800000, liabilities: 900000 },
-  { month: "Aug", assets: 2950000, liabilities: 880000 },
-  { month: "Sep", assets: 3100000, liabilities: 860000 },
-  { month: "Oct", assets: 3050000, liabilities: 840000 },
-  { month: "Nov", assets: 3250000, liabilities: 820000 },
-  { month: "Dec", assets: 3500000, liabilities: 800000 },
-];
-
-const SAMPLE_INSIGHTS: InsightData[] = [
-  { title: "Savings Increased", description: "You saved ₹20,000 more than last month. Keep the momentum going!", trend: "up" },
-  { title: "Liabilities Decreasing", description: "Your total liabilities dropped by 2.4% — steady debt reduction.", trend: "down" },
-  { title: "Asset Growth", description: "Mutual fund portfolio grew 7.2% this quarter, outpacing your target.", trend: "up" },
-];
-
-const SAMPLE_GOALS: GoalDisplay[] = [
-  { name: "₹1Cr Net Worth", status: "active", targetAmount: 10000000, color: "from-primary to-primary/60" },
-  { name: "Emergency Fund", status: "active", targetAmount: 600000, color: "from-success to-success/60" },
-  { name: "Home Loan Payoff", status: "active", targetAmount: 2000000, color: "from-destructive to-destructive/60" },
-];
+const EMPTY_NET_WORTH = { netWorth: 0, monthlyChange: 0, percentageChange: 0 };
 
 const GOAL_COLORS = [
   "from-primary to-primary/60",
@@ -94,9 +73,9 @@ const GOAL_COLORS = [
 ];
 
 const quickActions: QuickAction[] = [
-  { label: "Add Asset", icon: Plus, href: "/dashboard/calculator" },
-  { label: "Add Liability", icon: Plus, href: "/dashboard/calculator" },
-  { label: "Generate Report", icon: FileText, href: "/dashboard/calculator" },
+  { label: "Add Asset", icon: Plus, href: "/dashboard/snapshot" },
+  { label: "Add Liability", icon: Plus, href: "/dashboard/snapshot" },
+  { label: "Generate Report", icon: FileText, href: "/dashboard/snapshot" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -129,19 +108,6 @@ function pctChange(prev: number, curr: number): number {
 }
 
 // ---------------------------------------------------------------------------
-// Sample data badge
-// ---------------------------------------------------------------------------
-
-function SampleBadge() {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-primary italic">
-      <FlaskConical className="h-2.5 w-2.5" aria-hidden />
-      Simulation Mode
-    </span>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -149,6 +115,7 @@ export default function DashboardHub() {
   const { snapshots, loaded: snapshotsLoaded } = useNetWorthHistory();
   const { goals: rawGoals, loaded: goalsLoaded } = useFinancialGoals();
   const { profile, loaded: profileLoaded } = useUserProfile();
+  const [dismissed, setDismissed] = useState(false);
 
   const allLoaded = snapshotsLoaded && goalsLoaded && profileLoaded;
 
@@ -160,7 +127,7 @@ export default function DashboardHub() {
   );
 
   const netWorthData = useMemo(() => {
-    if (!hasSnapshots) return SAMPLE_NET_WORTH;
+    if (!hasSnapshots) return EMPTY_NET_WORTH;
     const latest = sortedSnapshots[sortedSnapshots.length - 1];
     const prev = sortedSnapshots.length >= 2 ? sortedSnapshots[sortedSnapshots.length - 2] : null;
     const monthlyChange = prev ? latest.netWorth - prev.netWorth : 0;
@@ -170,18 +137,17 @@ export default function DashboardHub() {
 
   // --- Derived: snapshots → chart data --------------------------------------
   const chartData: ChartDataPoint[] = useMemo(() => {
-    if (sortedSnapshots.length < 2) return SAMPLE_CHART;
+    if (sortedSnapshots.length < 2) return [];
     return sortedSnapshots.map((s) => ({
       month: shortMonth(s.date),
       assets: s.totalAssets,
       liabilities: s.totalLiabilities,
     }));
   }, [sortedSnapshots]);
-  const isChartSample = sortedSnapshots.length < 2;
 
   // --- Derived: snapshots → insights ----------------------------------------
   const insightsData: InsightData[] = useMemo(() => {
-    if (sortedSnapshots.length < 2) return SAMPLE_INSIGHTS;
+    if (sortedSnapshots.length < 2) return [];
     const latest = sortedSnapshots[sortedSnapshots.length - 1];
     const prev = sortedSnapshots[sortedSnapshots.length - 2];
     const result: InsightData[] = [];
@@ -211,7 +177,6 @@ export default function DashboardHub() {
 
     return result;
   }, [sortedSnapshots]);
-  const isInsightsSample = sortedSnapshots.length < 2;
 
   // --- Derived: goals -------------------------------------------------------
   const hasGoals = rawGoals.length > 0;
@@ -220,7 +185,7 @@ export default function DashboardHub() {
     [rawGoals]
   );
   const goalsDisplay: GoalDisplay[] = useMemo(() => {
-    if (!hasGoals) return SAMPLE_GOALS;
+    if (!hasGoals) return [];
     return activeGoals.slice(0, 5).map((g, i) => ({
       name: g.title,
       status: g.status,
@@ -242,33 +207,46 @@ export default function DashboardHub() {
     return { pct: Math.abs(pct).toFixed(1), positive: pct > 0 };
   }, [hasSnapshots, netWorthData.percentageChange]);
 
+  // --- Onboarding: no snapshots yet, not dismissed -------------------------
+  if (allLoaded && !hasSnapshots && !dismissed) {
+    return (
+      <FirstSnapshotOnboarding
+        firstName={firstName}
+        onDismiss={() => setDismissed(true)}
+      />
+    );
+  }
+
   // --- Loading state --------------------------------------------------------
   if (!allLoaded) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
+      <DashboardPageShell
+        variant="wide"
+        className="flex min-h-[50vh] items-center justify-center"
+      >
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="font-display italic text-foreground/40">Synchronizing vault...</p>
+          <p className="text-sm font-medium text-foreground/40">Synchronizing vault...</p>
         </div>
-      </div>
+      </DashboardPageShell>
     );
   }
 
   return (
-    <div className="space-y-10 px-4 py-10 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <DashboardPageShell variant="wide" className="space-y-10">
       {/* Header + Quick Actions */}
       <SectionContainer>
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="font-display italic text-4xl text-foreground sm:text-5xl">
+            <h1 className="text-4xl font-semibold text-brand-gradient">
               Welcome back, {firstName}
             </h1>
             {growthText ? (
-              <p className="mt-2 text-foreground/50 italic font-display text-lg">
+              <p className="mt-2 text-foreground/50 text-lg">
                 Your wealth {growthText.positive ? "ascended" : "receded"}{" "}
                 <span
                   className={cn(
-                    "font-semibold not-italic tabular-nums",
+                    "font-semibold tabular-nums",
                     growthText.positive ? "text-success" : "text-destructive"
                   )}
                 >
@@ -277,7 +255,7 @@ export default function DashboardHub() {
                 this period.
               </p>
             ) : (
-              <p className="mt-2 text-foreground/50 italic font-display text-lg">
+              <p className="mt-2 text-foreground/50 text-lg">
                 Begin your documentation to visualize your trajectory.
               </p>
             )}
@@ -304,12 +282,7 @@ export default function DashboardHub() {
         {/* Left column */}
         <SectionContainer delay={0.1} className="xl:col-span-2 space-y-8">
           <div className="relative group">
-            {!hasSnapshots && (
-              <div className="absolute right-6 top-6 z-10">
-                <SampleBadge />
-              </div>
-            )}
-            <NetWorthCard
+              <NetWorthCard
               netWorth={netWorthData.netWorth}
               monthlyChange={netWorthData.monthlyChange}
               percentageChange={netWorthData.percentageChange}
@@ -320,10 +293,9 @@ export default function DashboardHub() {
           {/* Goals */}
           <div className="surface-card rounded-3xl p-6 sm:p-8 border border-white/5 relative">
             <div className="mb-8 flex items-center justify-between">
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">
+              <h2 className="label-caps">
                 Milestones
               </h2>
-              {!hasGoals && <SampleBadge />}
             </div>
             {goalsDisplay.length > 0 ? (
               <div className="space-y-6">
@@ -345,9 +317,7 @@ export default function DashboardHub() {
                         whileInView={{
                           width: goal.targetAmount && hasSnapshots
                             ? `${Math.min(Math.round((netWorthData.netWorth / goal.targetAmount) * 100), 100)}%`
-                            : hasGoals
-                              ? "0%"
-                              : `${Math.min(Math.round((SAMPLE_NET_WORTH.netWorth / (goal.targetAmount ?? 1)) * 100), 100)}%`,
+                            : "0%",
                         }}
                         viewport={{ once: true }}
                         transition={{
@@ -371,7 +341,7 @@ export default function DashboardHub() {
               </div>
             ) : (
               <div className="py-4 text-center">
-                <p className="text-sm text-foreground/40 italic font-display mb-4">
+                <p className="text-sm text-foreground/40 mb-4">
                   Define your targets to activate tracking.
                 </p>
                 <Link href="/dashboard/chat">
@@ -388,81 +358,93 @@ export default function DashboardHub() {
         <SectionContainer delay={0.2} className="xl:col-span-3">
           <div className="surface-card h-full rounded-3xl p-6 sm:p-8 border border-white/5 shadow-glow relative">
             <div className="mb-10 flex items-center justify-between">
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">
+              <h2 className="label-caps">
                 Growth Allocation
               </h2>
-              {isChartSample && <SampleBadge />}
             </div>
-            <ResponsiveContainer width="100%" height={360}>
-              <LineChart data={chartData} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="oklch(0.94 0.008 80)"
-                  strokeOpacity={0.05}
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: "oklch(0.94 0.008 80)", opacity: 0.4, fontWeight: 500 }}
-                  dy={15}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={formatLakhsCr}
-                  tick={{ fontSize: 11, fill: "oklch(0.94 0.008 80)", opacity: 0.4, fontWeight: 500 }}
-                  width={40}
-                />
-                <Tooltip
-                  cursor={{ stroke: 'oklch(0.78 0.12 80)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                  formatter={(value) => [formatINR(Number(value ?? 0)), ""]}
-                  contentStyle={{
-                    backgroundColor: "oklch(0.13 0.007 60)",
-                    borderRadius: "16px",
-                    border: "1px solid oklch(0.78 0.12 80 / 0.2)",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-                    fontSize: "12px",
-                    color: "oklch(0.94 0.008 80)",
-                    padding: "12px",
-                  }}
-                  labelStyle={{ color: "oklch(0.94 0.008 80 / 0.5)", marginBottom: "4px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em" }}
-                />
-                <Legend 
-                  verticalAlign="top" 
-                  align="right" 
-                  iconType="circle"
-                  wrapperStyle={{ paddingTop: "0px", paddingBottom: "30px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, opacity: 0.7 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="assets"
-                  stroke="oklch(0.62 0.14 150)"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: "oklch(0.62 0.14 150)", strokeWidth: 0 }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                  name="Assets"
-                  animationDuration={1500}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="liabilities"
-                  stroke="oklch(0.65 0.15 45)"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: "oklch(0.65 0.15 45)", strokeWidth: 0 }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                  name="Liabilities"
-                  animationDuration={1500}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            {isChartSample && (
-              <div className="mt-8 flex items-center gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10">
-                 <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-                 <p className="text-[10px] text-primary/70 font-bold uppercase tracking-widest leading-relaxed">
-                   Enter real data in the <Link href="/dashboard/calculator" className="underline">Calculator</Link> to unlock personalized velocity projections.
-                 </p>
+            {chartData.length >= 2 ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <LineChart data={chartData} margin={{ top: 0, right: 16, left: 4, bottom: 24 }}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--border)"
+                    strokeOpacity={0.8}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 500, fontFamily: "var(--font-sans)" }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={formatLakhsCr}
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 500, fontFamily: "var(--font-sans)" }}
+                    width={40}
+                  />
+                  <Tooltip
+                    cursor={{ stroke: 'var(--primary)', strokeWidth: 1, strokeDasharray: '4 4', opacity: 0.4 }}
+                    formatter={(value) => [formatINR(Number(value ?? 0)), ""]}
+                    contentStyle={{
+                      backgroundColor: "var(--card)",
+                      borderRadius: "16px",
+                      border: "1px solid var(--border)",
+                      boxShadow: "var(--shadow-soft)",
+                      fontSize: "12px",
+                      fontFamily: "var(--font-sans)",
+                      color: "var(--card-foreground)",
+                      padding: "12px",
+                    }}
+                    labelStyle={{ color: "var(--muted-foreground)", marginBottom: "4px", fontSize: "10px", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.1em" }}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    align="right"
+                    iconType="circle"
+                    wrapperStyle={{ paddingTop: "0px", paddingBottom: "30px", fontSize: "10px", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, opacity: 0.7 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="assets"
+                    stroke="oklch(0.62 0.14 150)"
+                    strokeWidth={2.5}
+                    dot={{ r: 4, fill: "oklch(0.62 0.14 150)", strokeWidth: 0 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    name="Assets"
+                    animationDuration={1500}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="liabilities"
+                    stroke="oklch(0.65 0.15 45)"
+                    strokeWidth={2.5}
+                    dot={{ r: 4, fill: "oklch(0.65 0.15 45)", strokeWidth: 0 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    name="Liabilities"
+                    animationDuration={1500}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-[400px] flex-col items-center justify-center gap-5 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/5">
+                  <Sparkles className="h-6 w-6 text-primary/40" />
+                </div>
+                <div>
+                  <p className="text-foreground/40">
+                    Your growth chart appears after your first snapshot.
+                  </p>
+                  <p className="mt-1 text-xs text-foreground/25">
+                    Add at least two snapshots to see trends.
+                  </p>
+                </div>
+                <Link href="/dashboard/snapshot">
+                  <button className="rounded-full border border-primary/30 bg-primary/8 px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:bg-primary/15">
+                    Open Snapshot
+                  </button>
+                </Link>
               </div>
             )}
           </div>
@@ -472,24 +454,34 @@ export default function DashboardHub() {
       {/* Insights row */}
       <SectionContainer delay={0.3}>
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">
+          <h2 className="label-caps">
             Intelligence Feed
           </h2>
           <div className="h-px flex-1 mx-6 bg-white/5" />
-          {isInsightsSample && <SampleBadge />}
         </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {insightsData.map((insight, index) => (
-            <SectionContainer key={insight.title} delay={0.35 + index * 0.1}>
-              <InsightCard
-                title={insight.title}
-                description={insight.description}
-                trend={insight.trend}
-              />
-            </SectionContainer>
-          ))}
-        </div>
+        {insightsData.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {insightsData.map((insight, index) => (
+              <SectionContainer key={insight.title} delay={0.35 + index * 0.1}>
+                <InsightCard
+                  title={insight.title}
+                  description={insight.description}
+                  trend={insight.trend}
+                />
+              </SectionContainer>
+            ))}
+          </div>
+        ) : (
+          <div className="surface-card rounded-3xl border border-white/5 p-8 text-center">
+            <p className="text-foreground/35">
+              Insights unlock once you have two or more snapshots to compare.
+            </p>
+            <Link href="/dashboard/snapshot" className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">
+              Build your first snapshot →
+            </Link>
+          </div>
+        )}
       </SectionContainer>
-    </div>
+    </DashboardPageShell>
   );
 }
