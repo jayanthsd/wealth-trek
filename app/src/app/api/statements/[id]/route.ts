@@ -11,53 +11,68 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;
-  const db = getDb();
+  try {
+    const { id } = await params;
+    const db = getDb();
 
-  const existing = db
-    .prepare("SELECT * FROM statements WHERE id = ? AND user_id = ?")
-    .get(id, userId) as Record<string, unknown> | undefined;
+    const { data: existing, error: fetchError } = await db
+      .from("statements")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single();
 
-  if (!existing) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (fetchError || !existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const updates: Record<string, unknown> = {};
+
+    if (body.statementType !== undefined) updates.statement_type = body.statementType;
+    if (body.description !== undefined) updates.description = body.description;
+    if (body.category !== undefined) updates.category = body.category;
+    if (body.closingBalance !== undefined) updates.closing_balance = body.closingBalance;
+    if (body.ownershipPercentage !== undefined) updates.ownership_percentage = body.ownershipPercentage;
+    if (body.sourceDocumentId !== undefined) updates.source_document_id = body.sourceDocumentId;
+
+    if (Object.keys(updates).length > 0) {
+      const { error: updateError } = await db
+        .from("statements")
+        .update(updates)
+        .eq("id", id)
+        .eq("user_id", userId);
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
+      }
+    }
+
+    const { data: updated, error: refetchError } = await db
+      .from("statements")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single();
+
+    if (refetchError || !updated) {
+      return NextResponse.json({ error: "Failed to fetch updated statement" }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      statement: {
+        id: updated.id,
+        statementType: updated.statement_type,
+        description: updated.description,
+        category: updated.category,
+        closingBalance: updated.closing_balance,
+        ownershipPercentage: updated.ownership_percentage,
+        sourceDocumentId: updated.source_document_id || undefined,
+      },
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to update statement" }, { status: 500 });
   }
-
-  const body = await request.json();
-  const updates: Record<string, unknown> = {};
-
-  if (body.statementType !== undefined) updates.statement_type = body.statementType;
-  if (body.description !== undefined) updates.description = body.description;
-  if (body.category !== undefined) updates.category = body.category;
-  if (body.closingBalance !== undefined) updates.closing_balance = body.closingBalance;
-  if (body.ownershipPercentage !== undefined) updates.ownership_percentage = body.ownershipPercentage;
-  if (body.sourceDocumentId !== undefined) updates.source_document_id = body.sourceDocumentId;
-
-  if (Object.keys(updates).length > 0) {
-    const setClauses = Object.keys(updates)
-      .map((col) => `${col} = ?`)
-      .join(", ");
-    const values = Object.values(updates);
-
-    db.prepare(
-      `UPDATE statements SET ${setClauses}, updated_at = datetime('now') WHERE id = ? AND user_id = ?`
-    ).run(...values, id, userId);
-  }
-
-  const updated = db
-    .prepare("SELECT * FROM statements WHERE id = ? AND user_id = ?")
-    .get(id, userId) as Record<string, unknown>;
-
-  return NextResponse.json({
-    statement: {
-      id: updated.id,
-      statementType: updated.statement_type,
-      description: updated.description,
-      category: updated.category,
-      closingBalance: updated.closing_balance,
-      ownershipPercentage: updated.ownership_percentage,
-      sourceDocumentId: updated.source_document_id || undefined,
-    },
-  });
 }
 
 export async function DELETE(
@@ -69,16 +84,26 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;
-  const db = getDb();
+  try {
+    const { id } = await params;
+    const db = getDb();
 
-  const result = db
-    .prepare("DELETE FROM statements WHERE id = ? AND user_id = ?")
-    .run(id, userId);
+    const { error, count } = await db
+      .from("statements")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
 
-  if (result.changes === 0) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (!count || count === 0) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to delete statement" }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true });
 }

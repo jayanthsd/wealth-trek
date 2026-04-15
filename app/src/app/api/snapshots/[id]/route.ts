@@ -11,16 +11,26 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;
-  const db = getDb();
+  try {
+    const { id } = await params;
+    const db = getDb();
 
-  const result = db
-    .prepare("DELETE FROM snapshots WHERE id = ? AND user_id = ?")
-    .run(id, userId);
+    const { error, count } = await db
+      .from("snapshots")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
 
-  if (result.changes === 0) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (!count || count === 0) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to delete snapshot" }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true });
 }
