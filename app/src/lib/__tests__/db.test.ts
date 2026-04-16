@@ -1,43 +1,47 @@
 // @vitest-environment node
-const mkdirSync = vi.fn();
-const existsSync = vi.fn(() => false);
-const pragma = vi.fn();
-const exec = vi.fn();
-const DatabaseMock = vi.fn(function Database() {
-  return {
-    pragma,
-    exec,
-  };
-});
+const mockAuth = vi.fn();
+const mockCreateClient = vi.fn();
 
-vi.mock("fs", () => ({
-  default: {
-    existsSync,
-    mkdirSync,
-  },
+vi.mock("@clerk/nextjs/server", () => ({
+  auth: mockAuth,
 }));
 
-vi.mock("path", async () => {
-  const actual = await vi.importActual<typeof import("path")>("path");
-  return {
-    default: actual,
-  };
-});
-
-vi.mock("better-sqlite3", () => ({
-  default: DatabaseMock,
+vi.mock("@/utils/supabase/server", () => ({
+  createClient: mockCreateClient,
 }));
 
 describe("db", () => {
-  it("initializes database once and reuses singleton", async () => {
-    vi.resetModules();
-    const { getDb } = await import("@/lib/db");
-    const db1 = getDb();
-    const db2 = getDb();
+  it("returns authenticated Supabase client when user is signed in", async () => {
+    const fakeToken = "test-jwt-token";
+    const fakeSupabase = { from: vi.fn() };
+    mockAuth.mockResolvedValue({ userId: "user_123", getToken: vi.fn().mockResolvedValue(fakeToken) });
+    mockCreateClient.mockReturnValue(fakeSupabase);
 
-    expect(db1).toBe(db2);
-    expect(DatabaseMock).toHaveBeenCalledTimes(1);
-    expect(mkdirSync).toHaveBeenCalled();
-    expect(exec).toHaveBeenCalled();
+    const { getAuthenticatedClient } = await import("@/lib/db");
+    const { userId, supabase } = await getAuthenticatedClient();
+
+    expect(userId).toBe("user_123");
+    expect(supabase).toBe(fakeSupabase);
+    expect(mockCreateClient).toHaveBeenCalledWith(fakeToken);
+  });
+
+  it("returns null supabase when user is not authenticated", async () => {
+    mockAuth.mockResolvedValue({ userId: null, getToken: vi.fn() });
+
+    const { getAuthenticatedClient } = await import("@/lib/db");
+    const { userId, supabase } = await getAuthenticatedClient();
+
+    expect(userId).toBeNull();
+    expect(supabase).toBeNull();
+  });
+
+  it("returns null supabase when token is unavailable", async () => {
+    mockAuth.mockResolvedValue({ userId: "user_123", getToken: vi.fn().mockResolvedValue(null) });
+
+    const { getAuthenticatedClient } = await import("@/lib/db");
+    const { userId, supabase } = await getAuthenticatedClient();
+
+    expect(userId).toBe("user_123");
+    expect(supabase).toBeNull();
   });
 });

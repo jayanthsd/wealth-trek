@@ -75,3 +75,14 @@ The system SHALL maintain user sessions across page refreshes and browser restar
 #### Scenario: Expired session redirects to sign-in
 - **WHEN** user's session expires
 - **THEN** system redirects to sign-in page when accessing protected routes
+
+### Requirement: Clerk integrates with Supabase via Third-Party Auth
+The system SHALL use Clerk session tokens to authenticate with Supabase, enabling Row Level Security policies to enforce user isolation.
+
+#### Scenario: API routes obtain Supabase client with Clerk token
+- **WHEN** an API route needs database access
+- **THEN** it calls `getAuthenticatedClient()` which retrieves the Clerk session token via `getToken()` (no JWT template) and creates a Supabase client using the `accessToken` option
+
+#### Scenario: Clerk session token contains required claims
+- **WHEN** a Clerk session token is issued
+- **THEN** the token includes a `sub` claim with the Clerk user ID and a `role` claim with value `authenticated`

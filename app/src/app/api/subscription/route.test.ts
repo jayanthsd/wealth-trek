@@ -1,16 +1,21 @@
 // @vitest-environment node
-import { auth } from "@clerk/nextjs/server";
-
-vi.mock("@clerk/nextjs/server", () => ({
-  auth: vi.fn(),
-}));
-
-const get = vi.fn();
-const prepare = vi.fn(() => ({ get }));
+const mockGetAuthenticatedClient = vi.fn();
 
 vi.mock("@/lib/db", () => ({
-  getDb: vi.fn(() => ({ prepare })),
+  getAuthenticatedClient: (...args: unknown[]) => mockGetAuthenticatedClient(...args),
 }));
+
+function mockSupabase() {
+  const chain: Record<string, any> = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    gt: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: vi.fn(),
+  };
+  return { from: vi.fn(() => chain), _chain: chain };
+}
 
 describe("/api/subscription route", () => {
   beforeEach(() => {
@@ -18,15 +23,16 @@ describe("/api/subscription route", () => {
   });
 
   it("returns 401 for unauthenticated request", async () => {
-    vi.mocked(auth).mockResolvedValue({ userId: null } as never);
+    mockGetAuthenticatedClient.mockResolvedValue({ userId: null, supabase: null });
     const { GET } = await import("./route");
     const res = await GET();
     expect(res.status).toBe(401);
   });
 
   it("returns null subscription when no active row", async () => {
-    vi.mocked(auth).mockResolvedValue({ userId: "u1" } as never);
-    get.mockReturnValue(undefined);
+    const sb = mockSupabase();
+    sb._chain.single = vi.fn().mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+    mockGetAuthenticatedClient.mockResolvedValue({ userId: "u1", supabase: sb });
     const { GET } = await import("./route");
     const res = await GET();
     const body = await res.json();

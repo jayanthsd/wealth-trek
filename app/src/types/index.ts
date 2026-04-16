@@ -66,6 +66,34 @@ export interface ChatMessage {
   suggestedGoal?: Omit<FinancialGoal, "id" | "createdAt" | "status">;
 }
 
+export type InsightDomain = "growth" | "leverage" | "liquidity" | "efficiency" | "risk" | "behavior";
+export type InsightSeverity = "critical" | "warning" | "info" | "unavailable";
+export type InsightTrend = "up" | "down" | "neutral";
+
+export interface InsightItem {
+  id: string;
+  domain: InsightDomain;
+  title: string;
+  description: string;
+  severity: InsightSeverity;
+  trend?: InsightTrend;
+  metricValue?: number;
+  metricLabel?: string;
+  unavailable?: boolean;
+  unavailableReason?: string;
+}
+
+export interface InsightResult {
+  summary: {
+    total: number;
+    critical: number;
+    warnings: number;
+    info: number;
+  };
+  domains: Record<InsightDomain, InsightItem[]>;
+  computedAt: string;
+}
+
 export const STATEMENT_TYPE_PRESETS: StatementTypePreset[] = [
   { label: "Savings Bank Account", category: "asset" },
   { label: "Fixed Deposit", category: "asset" },

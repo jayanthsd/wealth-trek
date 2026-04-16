@@ -1,21 +1,22 @@
 // @vitest-environment node
-import { auth } from "@clerk/nextjs/server";
 import { jsonRequest } from "@/test-utils/apiTestHelpers";
 
-vi.mock("@clerk/nextjs/server", () => ({
-  auth: vi.fn(),
-}));
-
-const get = vi.fn();
-const run = vi.fn();
-const prepare = vi.fn((sql: string) => {
-  if (sql.includes("SELECT * FROM statements WHERE id")) return { get };
-  return { run, get };
-});
+const mockGetAuthenticatedClient = vi.fn();
 
 vi.mock("@/lib/db", () => ({
-  getDb: vi.fn(() => ({ prepare })),
+  getAuthenticatedClient: (...args: unknown[]) => mockGetAuthenticatedClient(...args),
 }));
+
+function mockSupabase() {
+  const chain: Record<string, any> = {
+    select: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    single: vi.fn(),
+  };
+  return { from: vi.fn(() => chain), _chain: chain };
+}
 
 describe("/api/statements/[id] route", () => {
   beforeEach(() => {
@@ -23,7 +24,7 @@ describe("/api/statements/[id] route", () => {
   });
 
   it("returns 401 for unauthenticated PUT", async () => {
-    vi.mocked(auth).mockResolvedValue({ userId: null } as never);
+    mockGetAuthenticatedClient.mockResolvedValue({ userId: null, supabase: null });
     const { PUT } = await import("./route");
     const req = jsonRequest("http://test/api/statements/1", "PUT", {});
     const res = await PUT(req as never, { params: Promise.resolve({ id: "1" }) });
@@ -31,8 +32,9 @@ describe("/api/statements/[id] route", () => {
   });
 
   it("returns 404 when statement missing on PUT", async () => {
-    vi.mocked(auth).mockResolvedValue({ userId: "u1" } as never);
-    get.mockReturnValueOnce(undefined);
+    const sb = mockSupabase();
+    sb._chain.single = vi.fn().mockResolvedValue({ data: null, error: { code: "PGRST116" } });
+    mockGetAuthenticatedClient.mockResolvedValue({ userId: "u1", supabase: sb });
     const { PUT } = await import("./route");
     const req = jsonRequest("http://test/api/statements/1", "PUT", { description: "x" });
     const res = await PUT(req as never, { params: Promise.resolve({ id: "1" }) });
@@ -40,8 +42,11 @@ describe("/api/statements/[id] route", () => {
   });
 
   it("deletes existing statement", async () => {
-    vi.mocked(auth).mockResolvedValue({ userId: "u1" } as never);
-    run.mockReturnValueOnce({ changes: 1 });
+    const eqFinal = vi.fn().mockResolvedValue({ error: null, count: 1 });
+    const eqFirst = vi.fn().mockReturnValue({ eq: eqFinal });
+    const deleteFn = vi.fn().mockReturnValue({ eq: eqFirst });
+    const sb = { from: vi.fn(() => ({ delete: deleteFn })) };
+    mockGetAuthenticatedClient.mockResolvedValue({ userId: "u1", supabase: sb });
     const { DELETE } = await import("./route");
     const req = jsonRequest("http://test/api/statements/1", "DELETE");
     const res = await DELETE(req as never, { params: Promise.resolve({ id: "1" }) });

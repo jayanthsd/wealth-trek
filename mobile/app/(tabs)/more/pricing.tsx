@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Check } from 'lucide-react-native';
+import { Check, ShieldCheck } from 'lucide-react-native';
 import { useTheme } from '@/components/ThemeProvider';
 import { useSubscription } from '@/hooks/useSubscription';
 import { createApiClient } from '@/lib/api';
@@ -70,6 +70,18 @@ export default function PricingScreen() {
               </Text>
             </TouchableOpacity>
           ))}
+        </View>
+
+        {/* Trust signals */}
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 20 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <ShieldCheck size={14} color={mutedColor} />
+            <Text style={{ color: mutedColor, fontSize: 12 }}>No credit card required</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Check size={14} color={mutedColor} />
+            <Text style={{ color: mutedColor, fontSize: 12 }}>Cancel anytime</Text>
+          </View>
         </View>
 
         {Object.values(PLANS).map((plan) => {

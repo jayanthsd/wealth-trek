@@ -1,21 +1,22 @@
 // @vitest-environment node
-import { auth } from "@clerk/nextjs/server";
 import { jsonRequest } from "@/test-utils/apiTestHelpers";
 
-vi.mock("@clerk/nextjs/server", () => ({
-  auth: vi.fn(),
-}));
-
-const run = vi.fn();
-const prepare = vi.fn(() => ({ run }));
+const mockGetAuthenticatedClient = vi.fn();
 
 vi.mock("@/lib/db", () => ({
-  getDb: vi.fn(() => ({ prepare })),
+  getAuthenticatedClient: (...args: unknown[]) => mockGetAuthenticatedClient(...args),
 }));
 
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "sub-id"),
 }));
+
+function mockSupabase() {
+  const chain: Record<string, any> = {
+    insert: vi.fn().mockResolvedValue({ error: null }),
+  };
+  return { from: vi.fn(() => chain), _chain: chain };
+}
 
 describe("/api/payments/verify route", () => {
   beforeEach(() => {
@@ -24,7 +25,7 @@ describe("/api/payments/verify route", () => {
   });
 
   it("returns 401 for unauthenticated request", async () => {
-    vi.mocked(auth).mockResolvedValue({ userId: null } as never);
+    mockGetAuthenticatedClient.mockResolvedValue({ userId: null, supabase: null });
     const { POST } = await import("./route");
     const req = jsonRequest("http://test/api/payments/verify", "POST", {});
     const res = await POST(req as never);
@@ -32,7 +33,8 @@ describe("/api/payments/verify route", () => {
   });
 
   it("returns 400 when payment details are missing", async () => {
-    vi.mocked(auth).mockResolvedValue({ userId: "u1" } as never);
+    const sb = mockSupabase();
+    mockGetAuthenticatedClient.mockResolvedValue({ userId: "u1", supabase: sb });
     const { POST } = await import("./route");
     const req = jsonRequest("http://test/api/payments/verify", "POST", {
       plan: "professional",
@@ -43,7 +45,8 @@ describe("/api/payments/verify route", () => {
   });
 
   it("returns 400 for invalid signature", async () => {
-    vi.mocked(auth).mockResolvedValue({ userId: "u1" } as never);
+    const sb = mockSupabase();
+    mockGetAuthenticatedClient.mockResolvedValue({ userId: "u1", supabase: sb });
     const { POST } = await import("./route");
     const req = jsonRequest("http://test/api/payments/verify", "POST", {
       razorpay_order_id: "ord_1",

@@ -1,35 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { getDb } from "@/lib/db";
+import { getAuthenticatedClient } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = getDb();
-  const rows = db
-    .prepare("SELECT * FROM snapshots WHERE user_id = ? ORDER BY date ASC")
-    .all(userId) as Record<string, unknown>[];
+  try {
+    const { data, error } = await supabase
+      .from("snapshots")
+      .select("*")
+      .eq("user_id", userId)
+      .order("date", { ascending: true });
 
-  const snapshots = rows.map((row) => ({
-    id: row.id,
-    date: row.date,
-    totalAssets: row.total_assets,
-    totalLiabilities: row.total_liabilities,
-    netWorth: row.net_worth,
-    entries: JSON.parse(row.entries_json as string),
-    createdAt: row.created_at,
-  }));
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-  return NextResponse.json({ snapshots });
+    const snapshots = (data || []).map((row: any) => ({
+      id: row.id,
+      date: row.date,
+      totalAssets: row.total_assets,
+      totalLiabilities: row.total_liabilities,
+      netWorth: row.net_worth,
+      entries: typeof row.entries_json === "string" ? JSON.parse(row.entries_json) : row.entries_json,
+      createdAt: row.created_at,
+    }));
+
+    return NextResponse.json({ snapshots });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to fetch snapshots" }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -37,16 +45,28 @@ export async function POST(request: NextRequest) {
   const { date, totalAssets, totalLiabilities, netWorth, entries } = body;
 
   try {
-    const db = getDb();
-
-    const existing = db
-      .prepare("SELECT id FROM snapshots WHERE user_id = ? AND date = ?")
-      .get(userId, date) as { id: string } | undefined;
+    const { data: existing } = await supabase
+      .from("snapshots")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("date", date)
+      .single();
 
     if (existing) {
-      db.prepare(
-        `UPDATE snapshots SET total_assets = ?, total_liabilities = ?, net_worth = ?, entries_json = ?, created_at = datetime('now') WHERE id = ? AND user_id = ?`
-      ).run(totalAssets, totalLiabilities, netWorth, JSON.stringify(entries), existing.id, userId);
+      const { error } = await supabase
+        .from("snapshots")
+        .update({
+          total_assets: totalAssets,
+          total_liabilities: totalLiabilities,
+          net_worth: netWorth,
+          entries_json: JSON.stringify(entries),
+        })
+        .eq("id", existing.id)
+        .eq("user_id", userId);
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
 
       return NextResponse.json({
         snapshot: {
@@ -62,9 +82,19 @@ export async function POST(request: NextRequest) {
     }
 
     const id = uuidv4();
-    db.prepare(
-      `INSERT INTO snapshots (id, user_id, date, total_assets, total_liabilities, net_worth, entries_json) VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).run(id, userId, date, totalAssets, totalLiabilities, netWorth, JSON.stringify(entries));
+    const { error } = await supabase.from("snapshots").insert({
+      id,
+      user_id: userId,
+      date,
+      total_assets: totalAssets,
+      total_liabilities: totalLiabilities,
+      net_worth: netWorth,
+      entries_json: JSON.stringify(entries),
+    });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
     return NextResponse.json(
       {
