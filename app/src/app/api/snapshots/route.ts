@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { getDb } from "@/lib/db";
+import { getAuthenticatedClient } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const db = getDb();
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from("snapshots")
       .select("*")
       .eq("user_id", userId)
@@ -38,8 +36,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -47,9 +45,7 @@ export async function POST(request: NextRequest) {
   const { date, totalAssets, totalLiabilities, netWorth, entries } = body;
 
   try {
-    const db = getDb();
-
-    const { data: existing } = await db
+    const { data: existing } = await supabase
       .from("snapshots")
       .select("id")
       .eq("user_id", userId)
@@ -57,7 +53,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existing) {
-      const { error } = await db
+      const { error } = await supabase
         .from("snapshots")
         .update({
           total_assets: totalAssets,
@@ -86,7 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     const id = uuidv4();
-    const { error } = await db.from("snapshots").insert({
+    const { error } = await supabase.from("snapshots").insert({
       id,
       user_id: userId,
       date,

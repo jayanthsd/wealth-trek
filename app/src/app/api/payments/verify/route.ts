@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import crypto from "crypto";
-import { getDb } from "@/lib/db";
+import { getAuthenticatedClient } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 import { isPaidPlan, getPlanAmount, type PlanId, type BillingCycle } from "@/lib/pricing";
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -65,10 +64,9 @@ export async function POST(request: NextRequest) {
   const amount = getPlanAmount(plan as PlanId, billingCycle as BillingCycle);
 
   try {
-    const db = getDb();
     const id = uuidv4();
 
-    const { error } = await db.from("subscriptions").insert({
+    const { error } = await supabase.from("subscriptions").insert({
       id,
       user_id: userId,
       razorpay_order_id,

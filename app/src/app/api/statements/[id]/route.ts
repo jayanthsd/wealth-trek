@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { getDb } from "@/lib/db";
+import { getAuthenticatedClient } from "@/lib/db";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const { id } = await params;
-    const db = getDb();
 
-    const { data: existing, error: fetchError } = await db
+    const { data: existing, error: fetchError } = await supabase
       .from("statements")
       .select("*")
       .eq("id", id)
@@ -37,7 +35,7 @@ export async function PUT(
     if (body.sourceDocumentId !== undefined) updates.source_document_id = body.sourceDocumentId;
 
     if (Object.keys(updates).length > 0) {
-      const { error: updateError } = await db
+      const { error: updateError } = await supabase
         .from("statements")
         .update(updates)
         .eq("id", id)
@@ -48,7 +46,7 @@ export async function PUT(
       }
     }
 
-    const { data: updated, error: refetchError } = await db
+    const { data: updated, error: refetchError } = await supabase
       .from("statements")
       .select("*")
       .eq("id", id)
@@ -79,16 +77,15 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const { id } = await params;
-    const db = getDb();
 
-    const { error, count } = await db
+    const { error, count } = await supabase
       .from("statements")
       .delete()
       .eq("id", id)

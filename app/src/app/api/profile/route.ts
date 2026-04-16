@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@/utils/supabase/server";
+import { getAuthenticatedClient } from "@/lib/db";
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const supabase = createClient();
 
   const { data: row, error } = await supabase
     .from("user_profiles")
@@ -44,13 +41,12 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();
-  const supabase = createClient();
 
   const { data: row, error } = await supabase
     .from("user_profiles")

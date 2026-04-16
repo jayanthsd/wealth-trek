@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { getDb } from "@/lib/db";
+import { getAuthenticatedClient } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 
 export async function GET(request: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const db = getDb();
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from("statements")
       .select("*")
       .eq("user_id", userId)
@@ -38,8 +36,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -54,8 +52,6 @@ export async function POST(request: NextRequest) {
   }> = Array.isArray(body) ? body : [body];
 
   try {
-    const db = getDb();
-
     const created: Array<{
       id: string;
       statementType: string;
@@ -77,7 +73,7 @@ export async function POST(request: NextRequest) {
       source_document_id: entry.sourceDocumentId || null,
     }));
 
-    const { data, error } = await db.from("statements").insert(insertData).select();
+    const { data, error } = await supabase.from("statements").insert(insertData).select();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

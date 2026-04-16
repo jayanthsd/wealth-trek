@@ -3,10 +3,14 @@ import { getItem, setItem } from '@/lib/storage';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { UserProfile } from '@/types';
 
+function todayISO(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
 const DEFAULT_PROFILE: UserProfile = {
   fullName: '',
   address: '',
-  certificateDate: '',
+  certificateDate: todayISO(),
   asOnDate: '',
 };
 

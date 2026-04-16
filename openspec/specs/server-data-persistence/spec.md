@@ -2,20 +2,9 @@
 
 ## Purpose
 
-This specification defines the requirements for server-side data persistence using SQLite database for statements and snapshots with proper authentication and user isolation.
+This specification defines the requirements for server-side data persistence using Supabase Postgres for statements and snapshots with proper authentication and user isolation via Clerk Third-Party Auth and Row Level Security.
 
 ## Requirements
-
-### Requirement: SQLite database initialization
-The system SHALL initialize a SQLite database on the server at `app/data/networth.db`, creating the `statements` and `snapshots` tables if they do not already exist on first access.
-
-#### Scenario: Database created on first API call
-- **WHEN** the server receives its first API request and no database file exists
-- **THEN** the system SHALL create the database file and both tables with correct schemas
-
-#### Scenario: Existing database reused
-- **WHEN** the server starts and a database file already exists
-- **THEN** the system SHALL reuse the existing database without data loss
 
 ### Requirement: Statements API - Create
 The system SHALL provide a `POST /api/statements` endpoint that creates one or more statement entries for the authenticated user.

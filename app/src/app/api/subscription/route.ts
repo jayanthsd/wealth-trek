@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { getDb } from "@/lib/db";
+import { getAuthenticatedClient } from "@/lib/db";
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const db = getDb();
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from("subscriptions")
       .select("*")
       .eq("user_id", userId)

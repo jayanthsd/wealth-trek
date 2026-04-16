@@ -1,15 +1,10 @@
 import { createClient as supabaseCreateClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-if (!supabaseUrl) {
-  throw new Error("Missing env var: NEXT_PUBLIC_SUPABASE_URL");
-}
-if (!supabaseServiceRoleKey) {
-  throw new Error("Missing env var: SUPABASE_SERVICE_ROLE_KEY");
-}
-
-export const createClient = () => {
-  return supabaseCreateClient(supabaseUrl, supabaseServiceRoleKey);
+export const createClient = (supabaseToken: string) => {
+  return supabaseCreateClient(supabaseUrl, supabaseAnonKey, {
+    accessToken: async () => supabaseToken,
+  });
 };

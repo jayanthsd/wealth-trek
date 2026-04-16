@@ -41,12 +41,10 @@ function computeEffectiveValue(entry: StatementEntry): number {
 }
 
 function formatINR(value: number): string {
-  const formatted = new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Math.abs(value));
-  return (value < 0 ? "-" : "") + formatted;
+  const abs = Math.abs(value);
+  if (abs >= 10000000) return `${value < 0 ? "-" : ""}₹${(abs / 10000000).toFixed(2)}Cr`;
+  if (abs >= 100000) return `${value < 0 ? "-" : ""}₹${(abs / 100000).toFixed(2)}L`;
+  return `${value < 0 ? "-" : ""}₹${abs.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 }
 
 function pct(value: number): string {
@@ -67,9 +65,7 @@ function daysSince(dateStr: string): number {
   return Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function assetClassTotals(
-  snapshot: NetWorthSnapshot
-): Map<string, number> {
+function assetClassTotals(snapshot: NetWorthSnapshot): Map<string, number> {
   const map = new Map<string, number>();
   for (const entry of snapshot.entries) {
     if (entry.category === "asset") {
@@ -753,5 +749,99 @@ export function computeAllInsights(
   return {
     domains,
     summary: { total, critical, warnings, info: total - critical - warnings },
+    computedAt: new Date().toISOString(),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Health Summary Helpers (for analytics screen)
+// ---------------------------------------------------------------------------
+
+export const DOMAIN_ORDER: InsightDomain[] = [
+  "growth",
+  "leverage",
+  "liquidity",
+  "efficiency",
+  "risk",
+  "behavior",
+];
+
+export const DOMAIN_LABELS: Record<InsightDomain, string> = {
+  growth: "Growth & Real Wealth",
+  leverage: "Leverage & Debt Drag",
+  liquidity: "Liquidity & Resilience",
+  efficiency: "Efficiency & Cash Utilization",
+  risk: "Risk & Scenario Stress",
+  behavior: "Behavioral Signals",
+};
+
+export const DOMAIN_ICONS: Record<InsightDomain, string> = {
+  growth: "trending-up",
+  leverage: "scale",
+  liquidity: "droplets",
+  efficiency: "zap",
+  risk: "shield-alert",
+  behavior: "brain",
+};
+
+export type HealthStatus = "green" | "amber" | "red" | "grey";
+
+export interface DomainHealth {
+  domain: InsightDomain;
+  status: HealthStatus;
+  verdict: string;
+  criticalCount: number;
+  warningCount: number;
+}
+
+export function computeDomainHealth(items: InsightItem[]): Omit<DomainHealth, "domain"> {
+  const available = items.filter((i) => !i.unavailable);
+  if (available.length === 0) {
+    return { status: "grey", verdict: "not enough data", criticalCount: 0, warningCount: 0 };
+  }
+
+  let criticalCount = 0;
+  let warningCount = 0;
+  for (const item of available) {
+    if (item.severity === "critical") criticalCount++;
+    if (item.severity === "warning") warningCount++;
+  }
+
+  if (criticalCount > 0) {
+    return { status: "red", verdict: "needs attention", criticalCount, warningCount };
+  }
+  if (warningCount > 0) {
+    return { status: "amber", verdict: "getting heavy", criticalCount, warningCount };
+  }
+  return { status: "green", verdict: "on track", criticalCount, warningCount };
+}
+
+export type OverallHealth = {
+  status: "All Clear" | "Mostly Healthy" | "Needs Attention";
+  color: HealthStatus;
+  domainsNeedingAttention: number;
+};
+
+export function computeOverallHealth(domainHealthMap: DomainHealth[]): OverallHealth {
+  let hasCritical = false;
+  let hasWarning = false;
+  let domainsNeedingAttention = 0;
+
+  for (const dh of domainHealthMap) {
+    if (dh.status === "red") {
+      hasCritical = true;
+      domainsNeedingAttention++;
+    } else if (dh.status === "amber") {
+      hasWarning = true;
+      domainsNeedingAttention++;
+    }
+  }
+
+  if (hasCritical) {
+    return { status: "Needs Attention", color: "red", domainsNeedingAttention };
+  }
+  if (hasWarning) {
+    return { status: "Mostly Healthy", color: "amber", domainsNeedingAttention };
+  }
+  return { status: "All Clear", color: "green", domainsNeedingAttention: 0 };
 }
