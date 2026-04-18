@@ -35,6 +35,28 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function DELETE() {
+  const { userId, supabase } = await getAuthenticatedClient();
+  if (!userId || !supabase) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { error } = await supabase
+      .from("statements")
+      .delete()
+      .eq("user_id", userId);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to delete statements" }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   const { userId, supabase } = await getAuthenticatedClient();
   if (!userId || !supabase) {

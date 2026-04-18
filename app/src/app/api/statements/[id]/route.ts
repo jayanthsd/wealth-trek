@@ -85,7 +85,7 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const { error, count } = await supabase
+    const { error } = await supabase
       .from("statements")
       .delete()
       .eq("id", id)
@@ -93,10 +93,6 @@ export async function DELETE(
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    if (!count || count === 0) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });

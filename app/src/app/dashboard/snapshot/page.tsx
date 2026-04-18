@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { StatementEntry, Category, ExtractedEntry, UploadedDocument } from "@/types";
 import { useStatements } from "@/hooks/useStatements";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -39,6 +39,14 @@ export default function SnapshotPage() {
   const { documents, addDocuments, deleteDocument, loaded: documentsLoaded } = useDocuments();
   const { saveSnapshot, snapshots, deleteSnapshot } = useNetWorthHistory();
 
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
+
+  const workingStatements = statements.filter((s) => !pendingDeleteIds.includes(s.id));
+
+  const handleLocalDelete = useCallback((id: string) => {
+    setPendingDeleteIds((prev) => [...prev, id]);
+  }, []);
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogDefaultCategory, setDialogDefaultCategory] = useState<Category>("asset");
   const [editingEntry, setEditingEntry] = useState<StatementEntry | null>(null);
@@ -53,7 +61,7 @@ export default function SnapshotPage() {
   const [snapshotStatus, setSnapshotStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
 
-  const { totalAssets, totalLiabilities, netWorth } = computeTotals(statements);
+  const { totalAssets, totalLiabilities, netWorth } = computeTotals(workingStatements);
 
   function openAddDialog(category: Category) {
     setEditingEntry(null);
@@ -114,13 +122,13 @@ export default function SnapshotPage() {
     setExtractionResults([]);
   }
 
-  function handleSaveSnapshot() {
+  async function handleSaveSnapshot() {
     if (!profile.asOnDate) {
       setSnapshotStatus({ type: "error", message: "Set a snapshot date before saving." });
       setTimeout(() => setSnapshotStatus(null), 4000);
       return;
     }
-    if (statements.length === 0) {
+    if (workingStatements.length === 0) {
       setSnapshotStatus({ type: "error", message: "Add at least one entry before saving." });
       setTimeout(() => setSnapshotStatus(null), 4000);
       return;
@@ -130,7 +138,14 @@ export default function SnapshotPage() {
       const confirmed = window.confirm(`A snapshot for ${profile.asOnDate} already exists. Overwrite it?`);
       if (!confirmed) return;
     }
-    saveSnapshot({ date: profile.asOnDate, totalAssets, totalLiabilities, netWorth, entries: statements });
+
+    // Flush pending deletions to DB
+    for (const id of pendingDeleteIds) {
+      await deleteStatement(id);
+    }
+    setPendingDeleteIds([]);
+
+    saveSnapshot({ date: profile.asOnDate, totalAssets, totalLiabilities, netWorth, entries: workingStatements });
     setSnapshotStatus({ type: "success", message: `Snapshot saved for ${profile.asOnDate}.` });
     setTimeout(() => setSnapshotStatus(null), 4000);
   }
@@ -141,12 +156,12 @@ export default function SnapshotPage() {
     if (!profile.asOnDate) errors.asOnDate = "Snapshot date is required";
     setProfileErrors(errors);
     if (Object.keys(errors).length > 0) return;
-    if (statements.length === 0) {
+    if (workingStatements.length === 0) {
       setSnapshotStatus({ type: "error", message: "Add at least one entry to generate a certificate." });
       setTimeout(() => setSnapshotStatus(null), 4000);
       return;
     }
-    generateNetWorthPdf(profile, statements);
+    generateNetWorthPdf(profile, workingStatements);
   }
 
   if (!statementsLoaded || !profileLoaded || !documentsLoaded) {
@@ -215,9 +230,9 @@ export default function SnapshotPage() {
 
           {/* ── Asset & Liability lists ── */}
           <StatementList
-            statements={statements}
+            statements={workingStatements}
             onEdit={openEditDialog}
-            onDelete={deleteStatement}
+            onDelete={handleLocalDelete}
             onAddAsset={() => openAddDialog("asset")}
             onAddLiability={() => openAddDialog("liability")}
           />
@@ -225,7 +240,7 @@ export default function SnapshotPage() {
           {/* ── BELOW: NetWorth Summary + Snapshot Details side-by-side ── */}
           <div className="grid grid-cols-1 gap-5 items-stretch lg:grid-cols-[0.7fr_0.3fr]">
             {/* Left: NetWorth Summary */}
-            <NetWorthSummary className="h-full" statements={statements} />
+            <NetWorthSummary className="h-full" statements={workingStatements} />
             
             {/* Right: Snapshot Details with buttons below */}
             <div className="flex h-full flex-col gap-4">

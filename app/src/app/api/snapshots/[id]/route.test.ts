@@ -28,8 +28,8 @@ describe("/api/snapshots/[id] route", () => {
     expect(res.status).toBe(401);
   });
 
-  it("returns 404 when snapshot missing", async () => {
-    const eqFinal = vi.fn().mockResolvedValue({ error: null, count: 0 });
+  it("returns 200 even when snapshot missing (idempotent delete)", async () => {
+    const eqFinal = vi.fn().mockResolvedValue({ error: null });
     const eqFirst = vi.fn().mockReturnValue({ eq: eqFinal });
     const deleteFn = vi.fn().mockReturnValue({ eq: eqFirst });
     const sb = { from: vi.fn(() => ({ delete: deleteFn })) };
@@ -37,6 +37,6 @@ describe("/api/snapshots/[id] route", () => {
     const { DELETE } = await import("./route");
     const req = jsonRequest("http://test/api/snapshots/1", "DELETE");
     const res = await DELETE(req as never, { params: Promise.resolve({ id: "1" }) });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
   });
 });

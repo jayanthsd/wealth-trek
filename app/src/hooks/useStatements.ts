@@ -78,5 +78,11 @@ export function useStatements() {
     setStatements((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
-  return { statements, addStatement, bulkAddStatements, updateStatement, deleteStatement, loaded };
+  const deleteAllStatements = useCallback(async () => {
+    const res = await fetch("/api/statements", { method: "DELETE" });
+    if (!res.ok) throw new Error("Failed to delete all statements");
+    setStatements([]);
+  }, []);
+
+  return { statements, addStatement, bulkAddStatements, updateStatement, deleteStatement, deleteAllStatements, loaded };
 }

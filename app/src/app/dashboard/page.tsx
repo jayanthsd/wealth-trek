@@ -10,7 +10,7 @@ import { DashboardPageShell } from "@/components/DashboardPageShell";
 import { useNetWorthHistory } from "@/hooks/useNetWorthHistory";
 import { useFinancialGoals } from "@/hooks/useFinancialGoals";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { FirstSnapshotOnboarding } from "@/components/FirstSnapshotOnboarding";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import {
   LineChart,
   Line,
@@ -210,7 +210,7 @@ export default function DashboardHub() {
   // --- Onboarding: no snapshots yet, not dismissed -------------------------
   if (allLoaded && !hasSnapshots && !dismissed) {
     return (
-      <FirstSnapshotOnboarding
+      <OnboardingWizard
         firstName={firstName}
         onDismiss={() => setDismissed(true)}
       />
