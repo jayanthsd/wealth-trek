@@ -19,6 +19,7 @@ import {
 import { Trash2, ChevronDown, ChevronUp, TrendingUp, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import WealthPercentileSection from "@/components/WealthPercentileSection";
 
 function formatCurrency(value: number): string {
   const formatted = new Intl.NumberFormat("en-IN", {
@@ -97,6 +98,9 @@ export default function WealthTrackerPage() {
           <span className="label-caps !text-primary">Live Insights</span>
         </div>
       </div>
+
+      {/* Wealth Percentile Section */}
+      <WealthPercentileSection />
 
       <div className="surface-card rounded-3xl p-6 sm:p-8 border border-white/5 shadow-glow">
         <h2 className="label-caps mb-8">
