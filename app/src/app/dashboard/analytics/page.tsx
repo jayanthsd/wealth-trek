@@ -3,10 +3,13 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNetWorthHistory } from "@/hooks/useNetWorthHistory";
+import { useAdvancedInputs } from "@/hooks/useAdvancedInputs";
 import { NetWorthSnapshot, StatementEntry, InsightDomain, InsightItem } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { computeAllInsights } from "@/lib/insightsEngine";
+import { AdvancedInputsForm } from "@/components/AdvancedInputsForm";
+import { AdvancedDimensionCards } from "@/components/AdvancedDimensionCards";
 import {
   ResponsiveContainer,
   PieChart,
@@ -29,6 +32,11 @@ import {
   ArrowLeft,
   CheckCircle2,
   Lock,
+  Flame,
+  Grid3X3,
+  Scale,
+  Receipt,
+  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -69,10 +77,17 @@ const DOMAIN_CONFIG: Record<InsightDomain, { label: string; icon: typeof Trendin
   efficiency: { label: "Efficiency & Cash Utilization", icon: Zap },
   risk: { label: "Risk & Scenario Stress", icon: AlertCircle },
   behavior: { label: "Behavioral Signals", icon: Activity },
+  inflation_audit: { label: "Inflation-Adjusted Asset Audit", icon: Flame },
+  gap_analysis: { label: "Instrument Gap Analysis", icon: Grid3X3 },
+  debt_quality: { label: "Debt Quality Score", icon: Scale },
+  tax_efficiency: { label: "Tax Efficiency Score", icon: Receipt },
+  trajectory: { label: "Net Worth Trajectory", icon: TrendingUp },
+  protection: { label: "Protection Layer Check", icon: ShieldCheck },
 };
 
 const DOMAIN_ORDER: InsightDomain[] = [
   "growth", "leverage", "liquidity", "efficiency", "risk", "behavior",
+  "inflation_audit", "gap_analysis", "debt_quality", "tax_efficiency", "trajectory", "protection",
 ];
 
 interface Movement {
@@ -371,6 +386,7 @@ function DomainDetailView({
 
 export default function AnalyticsPage() {
   const { snapshots, loaded } = useNetWorthHistory();
+  const { inputs: advancedInputs, save: saveAdvancedInputs, loaded: advLoaded } = useAdvancedInputs();
   const [selectedDomain, setSelectedDomain] = useState<InsightDomain | null>(null);
 
   const sorted = useMemo(
@@ -379,8 +395,8 @@ export default function AnalyticsPage() {
   );
 
   const insightResult = useMemo(
-    () => (loaded ? computeAllInsights(sorted) : null),
-    [sorted, loaded]
+    () => (loaded && advLoaded ? computeAllInsights(sorted, undefined, advancedInputs) : null),
+    [sorted, loaded, advLoaded, advancedInputs]
   );
 
   const latest = sorted.length > 0 ? sorted[sorted.length - 1] : null;
@@ -512,6 +528,12 @@ export default function AnalyticsPage() {
             </p>
           </div>
         </Card>
+      )}
+
+      <AdvancedInputsForm inputs={advancedInputs} onSave={saveAdvancedInputs} />
+
+      {insightResult?.advancedResults && (
+        <AdvancedDimensionCards results={insightResult.advancedResults} />
       )}
 
       {(topMovements.length > 0 || assetPieData.length > 0 || liabilityPieData.length > 0) && (

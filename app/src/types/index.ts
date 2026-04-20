@@ -66,7 +66,7 @@ export interface ChatMessage {
   suggestedGoal?: Omit<FinancialGoal, "id" | "createdAt" | "status">;
 }
 
-export type InsightDomain = "growth" | "leverage" | "liquidity" | "efficiency" | "risk" | "behavior";
+export type InsightDomain = "growth" | "leverage" | "liquidity" | "efficiency" | "risk" | "behavior" | "inflation_audit" | "gap_analysis" | "debt_quality" | "tax_efficiency" | "trajectory" | "protection";
 export type InsightSeverity = "critical" | "warning" | "info" | "unavailable";
 export type InsightTrend = "up" | "down" | "neutral";
 
@@ -91,21 +91,195 @@ export interface InsightResult {
     info: number;
   };
   domains: Record<InsightDomain, InsightItem[]>;
+  advancedResults?: AdvancedDimensionResults;
   computedAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Advanced Inputs (collected via optional form)
+// ---------------------------------------------------------------------------
+
+export interface AdvancedInputs {
+  monthly_income?: number;
+  monthly_emi_total?: number;
+  monthly_investment?: number;
+  current_age?: number;
+  retirement_age?: number;
+  existing_term_cover?: number;
+  existing_health_cover?: number;
+  ppf_annual_contribution?: number;
+  vpf_contribution?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Parsed Balance Sheet (extracted from snapshot entries)
+// ---------------------------------------------------------------------------
+
+export interface BalanceSheet {
+  assets: Record<string, number>;
+  liabilities: Record<string, number>;
+  total_assets: number;
+  total_liabilities: number;
+}
+
+// ---------------------------------------------------------------------------
+// Dimension 7: Inflation-Adjusted Asset Audit
+// ---------------------------------------------------------------------------
+
+export interface InflationAuditAsset {
+  key: string;
+  label: string;
+  balance: number;
+  nominal_return: number;
+  real_return: number;
+  status: "red" | "amber" | "green";
+}
+
+export interface InflationAuditResult {
+  per_asset: InflationAuditAsset[];
+  sub_inflation_pct: number;
+  sub_inflation_value: number;
+  overall_flag: "ok" | "warn" | "alert";
+  primary_alert: string;
+}
+
+// ---------------------------------------------------------------------------
+// Dimension 8: Instrument Gap Analysis
+// ---------------------------------------------------------------------------
+
+export interface GapBucket {
+  id: string;
+  label: string;
+  status: "ok" | "over" | "miss" | "nudge" | "info";
+  current_pct: number;
+  message: string;
+}
+
+export interface GapAnalysisResult {
+  buckets: GapBucket[];
+  gap_count: number;
+  over_count: number;
+  summary: string;
+}
+
+// ---------------------------------------------------------------------------
+// Dimension 9: Debt Quality Score
+// ---------------------------------------------------------------------------
+
+export interface DebtBreakdownItem {
+  name: string;
+  amount: number;
+  type: "productive" | "consumptive";
+  effective_rate_note: string;
+}
+
+export interface DebtQualityResult {
+  productive_total: number;
+  consumptive_total: number;
+  productive_pct: number;
+  consumptive_pct: number;
+  pdr: number;
+  status: "green" | "amber" | "red";
+  credit_card_flag: boolean;
+  breakdown: DebtBreakdownItem[];
+  primary_alert: string;
+  secondary_alert: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Dimension 10: Tax Efficiency Score
+// ---------------------------------------------------------------------------
+
+export interface TaxCheck {
+  id: string;
+  label: string;
+  passed: boolean;
+  message: string;
+}
+
+export interface TaxEfficiencyResult {
+  checks: TaxCheck[];
+  score: number;
+  score_pct: number;
+  grade: "A" | "B" | "C" | "D";
+  top_action: string;
+}
+
+// ---------------------------------------------------------------------------
+// Dimension 11: Net Worth Trajectory
+// ---------------------------------------------------------------------------
+
+export interface ProjectionScenario {
+  rate: number;
+  corpus: number;
+  vs_target_pct: number;
+}
+
+export interface TrajectoryResult {
+  current_net_worth: number;
+  investable_net_worth: number;
+  years_to_retirement: number;
+  monthly_surplus: number;
+  blended_return: number;
+  projections: {
+    conservative: ProjectionScenario;
+    base: ProjectionScenario;
+    optimistic: ProjectionScenario;
+  };
+  target_corpus: number;
+  on_track: boolean;
+  gap_amount: number;
+  gap_monthly_sip: number;
+  primary_alert: string;
+}
+
+// ---------------------------------------------------------------------------
+// Dimension 12: Protection Layer Check
+// ---------------------------------------------------------------------------
+
+export interface ProtectionResult {
+  total_liabilities: number;
+  annual_income: number;
+  recommended_term_cover: number;
+  existing_term_cover: number | null;
+  term_cover_gap: number | null;
+  coverage_pct: number | null;
+  term_status: "adequate" | "low" | "gap" | "not_entered";
+  health_status: "adequate" | "low" | "not_entered";
+  alerts: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Combined advanced dimension results
+// ---------------------------------------------------------------------------
+
+export interface AdvancedDimensionResults {
+  inflationAudit?: InflationAuditResult;
+  gapAnalysis?: GapAnalysisResult;
+  debtQuality?: DebtQualityResult;
+  taxEfficiency?: TaxEfficiencyResult;
+  trajectory?: TrajectoryResult;
+  protection?: ProtectionResult;
 }
 
 export const STATEMENT_TYPE_PRESETS: StatementTypePreset[] = [
   { label: "Savings Bank Account", category: "asset" },
   { label: "Fixed Deposit", category: "asset" },
   { label: "PPF", category: "asset" },
+  { label: "Provident Fund", category: "asset" },
   { label: "Mutual Fund", category: "asset" },
   { label: "Stock Holdings", category: "asset" },
   { label: "Real Estate", category: "asset" },
+  { label: "Self-Occupied Home", category: "asset" },
   { label: "Gold/Jewellery", category: "asset" },
+  { label: "Silver", category: "asset" },
   { label: "Other Asset", category: "asset" },
   { label: "Home Loan", category: "liability" },
+  { label: "Mortgage Loan", category: "liability" },
   { label: "Personal Loan", category: "liability" },
+  { label: "Top-up Loan", category: "liability" },
   { label: "Car Loan", category: "liability" },
+  { label: "Bike Loan", category: "liability" },
   { label: "Credit Card Outstanding", category: "liability" },
   { label: "Education Loan", category: "liability" },
   { label: "Other Liability", category: "liability" },

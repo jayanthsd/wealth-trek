@@ -4,7 +4,18 @@ import {
   InsightDomain,
   InsightItem,
   InsightResult,
+  AdvancedInputs,
+  AdvancedDimensionResults,
 } from "@/types";
+import { parseBalanceSheet } from "./balanceSheet";
+import {
+  computeInflationAudit,
+  computeGapAnalysis,
+  computeDebtQuality,
+  computeTaxEfficiency,
+  computeTrajectory,
+  computeProtection,
+} from "./advancedDimensions";
 
 // ---------------------------------------------------------------------------
 // Thresholds & Configuration
@@ -688,12 +699,19 @@ function emptyDomains(): Record<InsightDomain, InsightItem[]> {
     efficiency: [],
     risk: [],
     behavior: [],
+    inflation_audit: [],
+    gap_analysis: [],
+    debt_quality: [],
+    tax_efficiency: [],
+    trajectory: [],
+    protection: [],
   };
 }
 
 export function computeAllInsights(
   snapshots: NetWorthSnapshot[],
-  config: InsightConfig = INSIGHT_THRESHOLDS
+  config: InsightConfig = INSIGHT_THRESHOLDS,
+  advancedInputs?: AdvancedInputs
 ): InsightResult {
   const domains = emptyDomains();
 
@@ -738,6 +756,140 @@ export function computeAllInsights(
   domains.behavior.push(computeSnapshotStaleness(sorted, config));
   domains.behavior.push(computeSavingsConsistency(sorted, config));
 
+  // --- Advanced Dimensions (D7–D12) ---
+  const advancedResults: AdvancedDimensionResults = {};
+
+  if (latest) {
+    const bs = parseBalanceSheet(latest);
+
+    // D7: Inflation-Adjusted Asset Audit
+    const inflationAudit = computeInflationAudit(bs);
+    advancedResults.inflationAudit = inflationAudit;
+    const d7Severity: InsightItem["severity"] =
+      inflationAudit.overall_flag === "alert" ? "critical" :
+      inflationAudit.overall_flag === "warn" ? "warning" : "info";
+    domains.inflation_audit.push({
+      id: "inflation_audit.summary",
+      domain: "inflation_audit",
+      title: "Inflation-Adjusted Asset Audit",
+      description: inflationAudit.primary_alert || `${inflationAudit.sub_inflation_pct.toFixed(0)}% of assets are sub-inflation.`,
+      severity: d7Severity,
+      trend: d7Severity === "info" ? "up" : "down",
+      metricValue: inflationAudit.sub_inflation_pct / 100,
+      metricLabel: "Sub-inflation %",
+    });
+
+    // D8: Instrument Gap Analysis
+    const gapAnalysis = computeGapAnalysis(bs, advancedInputs);
+    advancedResults.gapAnalysis = gapAnalysis;
+    const d8Severity: InsightItem["severity"] =
+      gapAnalysis.gap_count >= 3 ? "critical" :
+      gapAnalysis.gap_count >= 1 || gapAnalysis.over_count >= 1 ? "warning" : "info";
+    domains.gap_analysis.push({
+      id: "gap_analysis.summary",
+      domain: "gap_analysis",
+      title: "Instrument Gap Analysis",
+      description: gapAnalysis.summary,
+      severity: d8Severity,
+      trend: d8Severity === "info" ? "neutral" : "down",
+      metricValue: gapAnalysis.gap_count,
+      metricLabel: "Gaps found",
+    });
+
+    // D9: Debt Quality Score
+    const debtQuality = computeDebtQuality(bs);
+    advancedResults.debtQuality = debtQuality;
+    const d9Severity: InsightItem["severity"] =
+      debtQuality.status === "red" || debtQuality.credit_card_flag ? "critical" :
+      debtQuality.status === "amber" ? "warning" : "info";
+    domains.debt_quality.push({
+      id: "debt_quality.summary",
+      domain: "debt_quality",
+      title: "Debt Quality Score",
+      description: debtQuality.primary_alert || `Productive debt ratio: ${debtQuality.pdr.toFixed(0)}%.`,
+      severity: d9Severity,
+      trend: d9Severity === "info" ? "up" : "down",
+      metricValue: debtQuality.consumptive_pct / 100,
+      metricLabel: "Consumptive debt %",
+    });
+
+    // D10: Tax Efficiency Score
+    const taxEfficiency = computeTaxEfficiency(bs, advancedInputs);
+    advancedResults.taxEfficiency = taxEfficiency;
+    const d10Severity: InsightItem["severity"] =
+      taxEfficiency.grade === "D" ? "critical" :
+      taxEfficiency.grade === "C" ? "warning" : "info";
+    domains.tax_efficiency.push({
+      id: "tax_efficiency.summary",
+      domain: "tax_efficiency",
+      title: "Tax Efficiency Score",
+      description: taxEfficiency.top_action,
+      severity: d10Severity,
+      trend: d10Severity === "info" ? "up" : "down",
+      metricValue: taxEfficiency.score_pct / 100,
+      metricLabel: `Grade: ${taxEfficiency.grade}`,
+    });
+
+    // D11: Net Worth Trajectory
+    const trajectory = computeTrajectory(bs, advancedInputs);
+    if (trajectory) {
+      advancedResults.trajectory = trajectory;
+      const d11Severity: InsightItem["severity"] = trajectory.on_track ? "info" : "warning";
+      domains.trajectory.push({
+        id: "trajectory.summary",
+        domain: "trajectory",
+        title: "Net Worth Trajectory",
+        description: trajectory.primary_alert,
+        severity: d11Severity,
+        trend: trajectory.on_track ? "up" : "down",
+        metricValue: trajectory.projections.base.vs_target_pct / 100,
+        metricLabel: "vs Target",
+      });
+    } else {
+      domains.trajectory.push({
+        id: "trajectory.summary",
+        domain: "trajectory",
+        title: "Net Worth Trajectory",
+        description: "Add monthly income and current age in Advanced Inputs to unlock trajectory projections.",
+        severity: "info",
+        trend: "neutral",
+        unavailable: true,
+        unavailableReason: "Requires monthly income and current age",
+      });
+    }
+
+    // D12: Protection Layer Check
+    const protection = computeProtection(bs, advancedInputs);
+    if (protection) {
+      advancedResults.protection = protection;
+      const hasGap = protection.term_status === "gap" || protection.term_status === "low" || protection.health_status === "low";
+      const notEntered = protection.term_status === "not_entered" || protection.health_status === "not_entered";
+      const d12Severity: InsightItem["severity"] =
+        hasGap ? "warning" : notEntered ? "info" : "info";
+      domains.protection.push({
+        id: "protection.summary",
+        domain: "protection",
+        title: "Protection Layer Check",
+        description: protection.alerts[0] ?? "Protection analysis complete.",
+        severity: d12Severity,
+        trend: hasGap ? "down" : "neutral",
+        metricValue: protection.coverage_pct != null ? protection.coverage_pct / 100 : undefined,
+        metricLabel: protection.coverage_pct != null ? "Term coverage" : undefined,
+      });
+    } else {
+      domains.protection.push({
+        id: "protection.summary",
+        domain: "protection",
+        title: "Protection Layer Check",
+        description: "Add monthly income in Advanced Inputs to unlock protection analysis.",
+        severity: "info",
+        trend: "neutral",
+        unavailable: true,
+        unavailableReason: "Requires monthly income",
+      });
+    }
+  }
+
   // --- Summary ---
   let total = 0;
   let critical = 0;
@@ -752,6 +904,7 @@ export function computeAllInsights(
 
   return {
     domains,
+    advancedResults,
     summary: { total, critical, warnings, info: total - critical - warnings },
     computedAt: new Date().toISOString(),
   };
