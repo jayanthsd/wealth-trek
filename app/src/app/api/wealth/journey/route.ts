@@ -118,6 +118,9 @@ export async function POST(request: NextRequest) {
       checklist,
       score,
       stageHistory,
+      focusItem: null,
+      projection: null,
+      delta: null,
     };
 
     return NextResponse.json(result);
