@@ -100,3 +100,25 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_profiles_user ON user_profiles(user_id);
+
+-- =========================================================================
+-- advanced_inputs
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS advanced_inputs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  monthly_income DOUBLE PRECISION,
+  monthly_emi_total DOUBLE PRECISION,
+  monthly_investment DOUBLE PRECISION,
+  current_age INTEGER,
+  retirement_age INTEGER,
+  existing_term_cover DOUBLE PRECISION,
+  existing_health_cover DOUBLE PRECISION,
+  ppf_annual_contribution DOUBLE PRECISION,
+  vpf_contribution DOUBLE PRECISION,
+  has_will_created BOOLEAN NOT NULL DEFAULT FALSE,
+  has_international_funds BOOLEAN NOT NULL DEFAULT FALSE,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_advanced_inputs_user ON advanced_inputs(user_id);

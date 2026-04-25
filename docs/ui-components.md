@@ -3,14 +3,18 @@
 ## Page Hierarchy
 
 ```
-/                           Landing page (public)
-/pricing                    Pricing page (public, auth-aware)
-/dashboard                  Dashboard overview (protected)
-/dashboard/wealth-tracker   Wealth Tracker — charts & snapshot history
-/dashboard/calculator       Net Worth Calculator — statement entry & PDF generation
-/dashboard/analytics        Analytics — comparisons, breakdowns, suggestions
-/dashboard/chat             AI Financial Chat — streaming conversation
-/dashboard/goals            Financial Goals — manage goals from chat or manual
+/                              Landing page (public)
+/pricing                       Pricing page (public, auth-aware)
+/dashboard                     Dashboard overview (protected)
+/dashboard/wealth-tracker      Wealth Tracker — charts & snapshot history
+/dashboard/snapshot            Net Worth Snapshot — statement entry & PDF generation
+/dashboard/analytics           Analytics — comparisons, breakdowns, suggestions
+/dashboard/health              Health Report — 12-domain financial health score
+/dashboard/position            My Position — wealth stage, percentile, portfolio breakdown
+/dashboard/chat                AI Financial Chat — streaming conversation
+/dashboard/goals               Financial Goals — manage goals from chat or manual
+/dashboard/action-plan         Action Plan — prioritised checklist items by stage
+/dashboard/wealth-journey      Wealth Journey — stage history and progression
 ```
 
 ### Public Pages
@@ -29,10 +33,14 @@ Dashboard sub-pages:
 
 | Page | Key hooks | Key components | Purpose |
 |---|---|---|---|
-| **Overview** | `useNetWorthHistory`, `useFinancialGoals`, `useUserProfile` | `NetWorthCard`, `InsightCard`, Recharts `LineChart` | At-a-glance summary: net worth trend, quick actions, goals, insights |
+| **Overview** | `useNetWorthHistory`, `useFinancialGoals`, `useUserProfile` | `NetWorthCard`, `InsightCard`, Recharts `LineChart` | At-a-glance summary: net worth trend, quick actions, intelligence feed |
 | **Wealth Tracker** | `useNetWorthHistory` | Recharts charts, snapshot table | Historical net worth line chart, expandable snapshot table |
-| **Calculator** | `useStatements`, `useDocuments`, `useUserProfile` | `StatementForm`, `StatementList`, `NetWorthSummary`, `DocumentUpload`, `DocumentList`, `ExtractionReview`, `UserProfileForm` | Full statement management, document extraction, PDF generation |
-| **Analytics** | `useNetWorthHistory` | Recharts `PieChart`, comparison cards | Snapshot-over-snapshot comparison, asset/liability breakdowns, suggestions |
+| **Snapshot** | `useStatements`, `useDocuments`, `useUserProfile` | `StatementForm`, `StatementList`, `NetWorthSummary`, `DocumentUpload`, `DocumentList`, `ExtractionReview`, `UserProfileForm` | Full statement management, document extraction, PDF generation |
+| **Analytics** | `useNetWorthHistory`, `useAdvancedInputs` | Recharts `PieChart`, dimension cards | Advanced dimension analysis (12 domains) with drill-down |
+| **Health Report** | `useNetWorthHistory`, `useAdvancedInputs` | `WealthHealthScoreCard`, `DomainGroup`, `ScoreGauge` | Overall health score + 4 grouped domain breakdowns (Growing, Protecting, Optimising, Borrowing) |
+| **My Position** | `useNetWorthHistory`, `useAdvancedInputs` | `StageStepper`, `WealthPercentileSection`, `BreakdownCard`, `ProgressChart` | Wealth stage, percentile ranking, portfolio pie charts, stage score history |
+| **Wealth Journey** | `useNetWorthHistory`, `useAdvancedInputs` | `StageStepper`, `ProgressChart`, `ChecklistCard` | Stage checklist progress and multi-snapshot stage history |
+| **Action Plan** | `useNetWorthHistory`, `useAdvancedInputs` | Prioritised checklist items | Top action items ranked by weight and current score gap |
 | **Chat** | `useChatHistory`, `useNetWorthHistory`, `useFinancialGoals` | Custom chat UI, streaming message display | AI financial advisor with goal extraction |
 | **Goals** | `useFinancialGoals` | Goal cards with status actions | List, create, pause, resume, complete, delete financial goals |
 
@@ -58,7 +66,9 @@ Dashboard sub-pages:
 | `DocumentUpload` | `components/DocumentUpload.tsx` | Drag-and-drop file upload zone. Accepts PDF, PNG, JPG (max 20MB). Shows upload progress. Calls `POST /api/documents/upload`. |
 | `DocumentList` | `components/DocumentList.tsx` | List of uploaded documents with file info. "Extract" button triggers AI extraction. "Delete" button removes file from server. |
 | `ExtractionReview` | `components/ExtractionReview.tsx` | Review modal for AI-extracted entries. Shows extracted entries in a table. User can accept, edit, or reject individual entries before saving as statements. |
-| `UserProfileForm` | `components/UserProfileForm.tsx` | Form for user profile data (full name, address, certificate date, as-on date). Persisted to localStorage. Used for PDF certificate personalization. |
+| `UserProfileForm` | `components/UserProfileForm.tsx` | Form for user profile data (full name, address, certificate date, as-on date). Persisted via `useUserProfile` → `/api/profile`. Used for PDF certificate personalization. |
+| `AdvancedInputsForm` | `components/AdvancedInputsForm.tsx` | Collapsible form for 9 numeric inputs (income, EMIs, monthly investment, age, insurance covers, PPF/VPF) and 2 boolean toggles (will, international funds). Saved via `useAdvancedInputs` → `/api/advanced-inputs`. Powers checklist evaluations and projections. |
+| `WealthStageComponents` | `components/WealthStageComponents.tsx` | Collection of wealth-journey UI atoms: `StageStepper`, `DeltaBanner`, `TransitionBanner`, `ProjectionCallout`, `ProgressChart`, `ScoreGauge`. Used across Position and Health pages. |
 | `HeroChart` | `components/HeroChart.tsx` | Animated sample chart on the landing page hero section. Displays a mock net worth growth curve using Recharts. |
 | `AnimatedHero` | `components/AnimatedHero.tsx` | Landing page animated text blocks and CTA button. Uses Framer Motion for staggered fade-in entrance animations. |
 

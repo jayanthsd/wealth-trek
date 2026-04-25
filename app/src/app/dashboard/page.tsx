@@ -8,7 +8,6 @@ import { InsightCard } from "@/components/ui/InsightCard";
 import { SectionContainer } from "@/components/ui/SectionContainer";
 import { DashboardPageShell } from "@/components/DashboardPageShell";
 import { useNetWorthHistory } from "@/hooks/useNetWorthHistory";
-import { useFinancialGoals } from "@/hooks/useFinancialGoals";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { FirstSnapshotOnboarding } from "@/components/FirstSnapshotOnboarding";
 import {
@@ -25,7 +24,6 @@ import {
   Plus,
   FileText,
   Sparkles,
-  ArrowRight,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,13 +44,6 @@ interface InsightData {
   trend: "up" | "down";
 }
 
-interface GoalDisplay {
-  name: string;
-  status: string;
-  targetAmount: number | null;
-  color: string;
-}
-
 interface QuickAction {
   label: string;
   icon: LucideIcon;
@@ -64,13 +55,6 @@ interface QuickAction {
 // ---------------------------------------------------------------------------
 
 const EMPTY_NET_WORTH = { netWorth: 0, monthlyChange: 0, percentageChange: 0 };
-
-const GOAL_COLORS = [
-  "from-primary to-primary/60",
-  "from-success to-success/60",
-  "from-destructive to-destructive/60",
-  "from-primary/80 to-primary/40",
-];
 
 const quickActions: QuickAction[] = [
   { label: "Add Asset", icon: Plus, href: "/dashboard/snapshot" },
@@ -113,11 +97,10 @@ function pctChange(prev: number, curr: number): number {
 
 export default function DashboardHub() {
   const { snapshots, loaded: snapshotsLoaded } = useNetWorthHistory();
-  const { goals: rawGoals, loaded: goalsLoaded } = useFinancialGoals();
   const { profile, loaded: profileLoaded } = useUserProfile();
   const [dismissed, setDismissed] = useState(false);
 
-  const allLoaded = snapshotsLoaded && goalsLoaded && profileLoaded;
+  const allLoaded = snapshotsLoaded && profileLoaded;
 
   // --- Derived: snapshots → net worth card ----------------------------------
   const hasSnapshots = snapshots.length > 0;
@@ -177,22 +160,6 @@ export default function DashboardHub() {
 
     return result;
   }, [sortedSnapshots]);
-
-  // --- Derived: goals -------------------------------------------------------
-  const hasGoals = rawGoals.length > 0;
-  const activeGoals = useMemo(
-    () => rawGoals.filter((g) => g.status === "active"),
-    [rawGoals]
-  );
-  const goalsDisplay: GoalDisplay[] = useMemo(() => {
-    if (!hasGoals) return [];
-    return activeGoals.slice(0, 5).map((g, i) => ({
-      name: g.title,
-      status: g.status,
-      targetAmount: g.targetAmount ?? null,
-      color: GOAL_COLORS[i % GOAL_COLORS.length],
-    }));
-  }, [activeGoals, hasGoals]);
 
   // --- Derived: user greeting -----------------------------------------------
   const firstName = profile.fullName
@@ -277,80 +244,17 @@ export default function DashboardHub() {
         </div>
       </SectionContainer>
 
-      {/* Top row: Net Worth + Goals  |  Chart */}
+      {/* Top row: Net Worth  |  Chart */}
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-5">
         {/* Left column */}
-        <SectionContainer delay={0.1} className="xl:col-span-2 space-y-8">
+        <SectionContainer delay={0.1} className="xl:col-span-2">
           <div className="relative group">
-              <NetWorthCard
+            <NetWorthCard
               netWorth={netWorthData.netWorth}
               monthlyChange={netWorthData.monthlyChange}
               percentageChange={netWorthData.percentageChange}
               className="shadow-glow"
             />
-          </div>
-
-          {/* Goals */}
-          <div className="surface-card rounded-3xl p-6 sm:p-8 border border-white/5 relative">
-            <div className="mb-8 flex items-center justify-between">
-              <h2 className="label-caps">
-                Milestones
-              </h2>
-            </div>
-            {goalsDisplay.length > 0 ? (
-              <div className="space-y-6">
-                {goalsDisplay.map((goal) => (
-                  <div key={goal.name} className="group/goal">
-                    <div className="mb-2.5 flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground/80 group-hover/goal:text-primary transition-colors">
-                        {goal.name}
-                      </span>
-                      {goal.targetAmount && (
-                        <span className="text-[10px] font-bold tabular-nums text-foreground/30">
-                          {formatLakhsCr(goal.targetAmount)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5 border border-white/5">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{
-                          width: goal.targetAmount && hasSnapshots
-                            ? `${Math.min(Math.round((netWorthData.netWorth / goal.targetAmount) * 100), 100)}%`
-                            : "0%",
-                        }}
-                        viewport={{ once: true }}
-                        transition={{
-                          duration: 1.5,
-                          delay: 0.5,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                        className={cn("h-full rounded-full bg-gradient-to-r shadow-[0_0_10px_rgba(198,165,88,0.2)]", goal.color)}
-                      />
-                    </div>
-                  </div>
-                ))}
-                {hasGoals && (
-                  <Link
-                    href="/dashboard/goals"
-                    className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary transition-colors"
-                  >
-                    Manage All Goals <ArrowRight className="h-3 w-3" />
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <div className="py-4 text-center">
-                <p className="text-sm text-foreground/40 mb-4">
-                  Define your targets to activate tracking.
-                </p>
-                <Link href="/dashboard/chat">
-                   <button className="text-[10px] font-bold uppercase tracking-widest text-primary border border-primary/20 px-4 py-2 rounded-full hover:bg-primary/5 transition-colors">
-                      Consult Advisor
-                   </button>
-                </Link>
-              </div>
-            )}
           </div>
         </SectionContainer>
 
@@ -477,11 +381,12 @@ export default function DashboardHub() {
               Insights unlock once you have two or more snapshots to compare.
             </p>
             <Link href="/dashboard/snapshot" className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">
-              Build your first snapshot →
+              {snapshots.length === 0 ? "Build your first snapshot →" : "Add another snapshot →"}
             </Link>
           </div>
         )}
       </SectionContainer>
+
     </DashboardPageShell>
   );
 }

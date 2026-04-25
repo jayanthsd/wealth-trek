@@ -166,6 +166,43 @@ Delete an uploaded document file from the server.
 
 ---
 
+## Advanced Inputs
+
+User-supplied financial parameters used to power richer checklist evaluations and projections (monthly income, SIP amount, insurance cover, etc.).
+
+### `GET /api/advanced-inputs`
+
+Fetch the stored advanced inputs for the authenticated user.
+
+- **Auth**: Required
+- **Response**: `{ inputs: AdvancedInputs }` — empty object `{}` if none saved yet
+
+### `POST /api/advanced-inputs`
+
+Create or replace (upsert) the advanced inputs for the authenticated user. Send the full `AdvancedInputs` object; omitted fields are set to `null`.
+
+- **Auth**: Required
+- **Body**:
+  ```json
+  {
+    "monthly_income": 150000,
+    "monthly_emi_total": 25000,
+    "monthly_investment": 30000,
+    "current_age": 32,
+    "retirement_age": 60,
+    "existing_term_cover": 10000000,
+    "existing_health_cover": 500000,
+    "ppf_annual_contribution": 150000,
+    "vpf_contribution": 5000,
+    "has_will_created": false,
+    "has_international_funds": true
+  }
+  ```
+- **Response**: `{ inputs: AdvancedInputs }` (as stored)
+- **Notes**: All fields are optional. Only one row per user is kept (upsert on `user_id`).
+
+---
+
 ## Chat
 
 AI-powered financial advisor with streaming responses.
@@ -189,6 +226,124 @@ Send a conversation to the AI advisor and receive a streaming response.
   - End signal: `data: [DONE]\n\n`
 - **Model**: `gpt-4o-mini` with financial advisor system prompt
 - **Goal extraction**: When the AI identifies a goal, it appends a `|||GOAL|||{...}|||END_GOAL|||` block to the message
+
+### `GET /api/chat/messages`
+
+Fetch all stored chat messages for the authenticated user, ordered by timestamp ascending.
+
+- **Auth**: Required
+- **Response**: `{ messages: ChatMessage[] }`
+
+### `POST /api/chat/messages`
+
+Persist one or more chat messages. Accepts a single message object or an array.
+
+- **Auth**: Required
+- **Body**: `ChatMessage` or `ChatMessage[]`
+  ```json
+  { "role": "user", "content": "What is my savings rate?" }
+  ```
+- **Response** (`201`): `{ messages: ChatMessage[] }` — DB-assigned `id` and `timestamp` are returned
+
+### `PUT /api/chat/messages/[id]`
+
+Update an existing message (used to save final streamed content or attach a suggested goal).
+
+- **Auth**: Required
+- **Body**: Partial — `{ content?, suggestedGoal? }`
+- **Response**: `{ message: ChatMessage }`
+- **Errors**: `404` if not found or not owned
+
+### `DELETE /api/chat/messages/[id]`
+
+Delete a single chat message.
+
+- **Auth**: Required
+- **Response**: `{ success: true }`
+- **Errors**: `404` if not found
+
+### `DELETE /api/chat/messages`
+
+Delete **all** chat messages for the authenticated user (used by "Clear History").
+
+- **Auth**: Required
+- **Response**: `{ success: true }`
+
+---
+
+## Goals
+
+Financial goals created manually or extracted from the AI chat.
+
+### `GET /api/goals`
+
+Fetch all goals for the authenticated user, ordered by `created_at` ascending.
+
+- **Auth**: Required
+- **Response**: `{ goals: FinancialGoal[] }`
+
+### `POST /api/goals`
+
+Create one or more goals. Accepts a single goal object or an array.
+
+- **Auth**: Required
+- **Body**: `FinancialGoal` or `FinancialGoal[]`
+  ```json
+  {
+    "title": "Emergency Fund",
+    "description": "Build 6 months of expenses",
+    "targetAmount": 300000,
+    "targetDate": "2025-12-31",
+    "status": "active"
+  }
+  ```
+- **Response** (`201`): `{ goals: FinancialGoal[] }` — DB-assigned `id` and `created_at` are returned
+
+### `PUT /api/goals/[id]`
+
+Update a goal's fields. All fields are optional — only provided fields are changed.
+
+- **Auth**: Required
+- **Body**: Partial `{ title?, description?, targetAmount?, targetDate?, status? }`
+- **Response**: `{ goal: FinancialGoal }`
+- **Errors**: `404` if not found or not owned
+
+### `DELETE /api/goals/[id]`
+
+Delete a single goal.
+
+- **Auth**: Required
+- **Response**: `{ success: true }`
+- **Errors**: `404` if not found
+
+---
+
+## User Profile
+
+User display name and certificate personalization fields.
+
+### `GET /api/profile`
+
+Fetch the profile for the authenticated user.
+
+- **Auth**: Required
+- **Response**: `{ profile: UserProfile }` — returns default empty profile if none saved yet
+
+### `POST /api/profile`
+
+Create or replace (upsert) the user profile.
+
+- **Auth**: Required
+- **Body**:
+  ```json
+  {
+    "fullName": "Jayantha S D",
+    "address": "Bangalore, Karnataka",
+    "certificateDate": "2025-04-25",
+    "asOnDate": "2025-04-01"
+  }
+  ```
+- **Response**: `{ profile: UserProfile }`
 
 ---
 

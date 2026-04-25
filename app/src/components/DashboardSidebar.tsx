@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  TrendingUp,
+  Compass,
+  ListChecks,
   ClipboardEdit,
   BarChart3,
   MessageCircle,
@@ -25,12 +26,13 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Wealth Tracker", href: "/dashboard/wealth-tracker", icon: TrendingUp },
-  { label: "Snapshot", href: "/dashboard/snapshot", icon: ClipboardEdit },
-  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-  { label: "Chat", href: "/dashboard/chat", icon: MessageCircle },
+  { label: "Home", href: "/dashboard", icon: LayoutDashboard },
+  { label: "My Position", href: "/dashboard/position", icon: Compass },
+  { label: "Action Plan", href: "/dashboard/action-plan", icon: ListChecks },
+  { label: "Health Report", href: "/dashboard/health", icon: BarChart3 },
   { label: "Goals", href: "/dashboard/goals", icon: Target },
+  { label: "Add Data", href: "/dashboard/snapshot", icon: ClipboardEdit },
+  { label: "Advisor", href: "/dashboard/chat", icon: MessageCircle },
 ];
 
 
@@ -66,13 +68,13 @@ export function DashboardSidebar() {
       {/* Sidebar — desktop: static, mobile: slide-over */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/5 surface-dark-glass",
+          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border surface-dark-glass",
           "transition-transform duration-500 ease-in-out lg:translate-x-0 lg:static lg:z-auto",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Sidebar header */}
-        <div className="flex h-20 items-center justify-between px-6 border-b border-white/5">
+        <div className="flex h-20 items-center justify-between px-6 border-b border-border">
           <Link
             href="/dashboard"
             className="flex items-center gap-3"
@@ -84,7 +86,7 @@ export function DashboardSidebar() {
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/40 hover:bg-white/5 lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary lg:hidden"
             aria-label="Close navigation"
           >
             <X className="h-5 w-5" />
@@ -108,7 +110,7 @@ export function DashboardSidebar() {
                   "group relative flex items-center gap-4 rounded-2xl px-4 py-3.5 text-sm font-medium transition-all duration-300",
                   isActive
                     ? "text-primary"
-                    : "text-foreground/70 hover:text-foreground hover:bg-white/5"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 )}
               >
                 {isActive && (
@@ -137,12 +139,12 @@ export function DashboardSidebar() {
         </nav>
 
         {/* Sidebar footer */}
-        <div className="border-t border-white/5 px-6 py-5">
+        <div className="border-t border-border px-6 py-5">
           <div className="flex items-center gap-2">
-            <WealthTrekLogo size={24} className="text-foreground/40" />
-            <span className="text-base font-semibold text-foreground/50">Wealth Trek</span>
+            <WealthTrekLogo size={24} className="text-muted-foreground" />
+            <span className="text-base font-semibold text-muted-foreground">Wealth Trek</span>
           </div>
-          <p className="mt-2 text-xs text-foreground/25">
+          <p className="mt-2 text-xs text-muted-foreground/70">
             &copy; 2026 Wealth Trek. All rights reserved.
           </p>
         </div>

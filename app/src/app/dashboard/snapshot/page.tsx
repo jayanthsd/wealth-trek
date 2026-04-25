@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { StatementEntry, Category, ExtractedEntry, UploadedDocument } from "@/types";
 import { useStatements } from "@/hooks/useStatements";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -12,6 +13,7 @@ import { NetWorthSummary } from "@/components/NetWorthSummary";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { DocumentList } from "@/components/DocumentList";
 import { ExtractionReview } from "@/components/ExtractionReview";
+import { SnapshotTemplateWizard } from "@/components/SnapshotTemplateWizard";
 import { generateNetWorthPdf } from "@/lib/generatePdf";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,15 +31,48 @@ import {
   ChevronUp,
   CheckCircle2,
   AlertCircle,
+  Trash2,
 } from "lucide-react";
 import { computeTotals } from "@/lib/computations";
 import { DashboardPageShell } from "@/components/DashboardPageShell";
+import { NetWorthSnapshot } from "@/types";
+import { cn } from "@/lib/utils";
 
 export default function SnapshotPage() {
   const { statements, addStatement, bulkAddStatements, updateStatement, deleteStatement, loaded: statementsLoaded } = useStatements();
   const { profile, updateProfile, loaded: profileLoaded } = useUserProfile();
   const { documents, addDocuments, deleteDocument, loaded: documentsLoaded } = useDocuments();
   const { saveSnapshot, snapshots, deleteSnapshot } = useNetWorthHistory();
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const modeParam = searchParams.get("mode");
+  const templateMode = (modeParam === "quick" || modeParam === "complete") ? modeParam : null;
+  const [wizardDismissed, setWizardDismissed] = useState(false);
+
+  const showWizard = !!templateMode && !wizardDismissed && statements.length === 0;
+
+  const handleWizardApply = useCallback(
+    async (
+      entries: Array<{
+        statementType: string;
+        description: string;
+        category: Category;
+        closingBalance: number;
+        ownershipPercentage: number;
+      }>
+    ) => {
+      await bulkAddStatements(entries);
+      setWizardDismissed(true);
+      router.replace("/dashboard/snapshot");
+    },
+    [bulkAddStatements, router]
+  );
+
+  const handleWizardSkip = useCallback(() => {
+    setWizardDismissed(true);
+    router.replace("/dashboard");
+  }, [router]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogDefaultCategory, setDialogDefaultCategory] = useState<Category>("asset");
@@ -52,6 +87,7 @@ export default function SnapshotPage() {
   const [extractionError, setExtractionError] = useState<string | null>(null);
   const [snapshotStatus, setSnapshotStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { totalAssets, totalLiabilities, netWorth } = computeTotals(statements);
 
@@ -154,9 +190,19 @@ export default function SnapshotPage() {
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm font-medium text-foreground/40">Loading studio...</p>
+          <p className="text-sm font-medium text-muted-foreground">Loading studio...</p>
         </div>
       </div>
+    );
+  }
+
+  if (showWizard && templateMode) {
+    return (
+      <SnapshotTemplateWizard
+        mode={templateMode}
+        onApply={handleWizardApply}
+        onSkip={handleWizardSkip}
+      />
     );
   }
 
@@ -165,7 +211,7 @@ export default function SnapshotPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-semibold text-brand-gradient">Snapshot</h1>
-          <p className="mt-2 text-foreground/50">
+          <p className="mt-2 text-muted-foreground">
             Build your financial picture. Save a snapshot when you're ready.
           </p>
         </div>
@@ -174,7 +220,7 @@ export default function SnapshotPage() {
         <div className="mb-6">
           <button
             onClick={() => setUploadOpen((v) => !v)}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-white/8 hover:text-foreground"
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <Upload className="h-4 w-4" />
             Import from Statement
@@ -213,6 +259,9 @@ export default function SnapshotPage() {
             </div>
           )}
 
+          {/* ── Net Worth Summary (top for quick visibility) ── */}
+          <NetWorthSummary className="w-full" statements={statements} />
+
           {/* ── Asset & Liability lists ── */}
           <StatementList
             statements={statements}
@@ -222,18 +271,13 @@ export default function SnapshotPage() {
             onAddLiability={() => openAddDialog("liability")}
           />
 
-          {/* ── BELOW: NetWorth Summary + Snapshot Details side-by-side ── */}
-          <div className="grid grid-cols-1 gap-5 items-stretch lg:grid-cols-[0.7fr_0.3fr]">
-            {/* Left: NetWorth Summary */}
-            <NetWorthSummary className="h-full" statements={statements} />
-            
-            {/* Right: Snapshot Details with buttons below */}
-            <div className="flex h-full flex-col gap-4">
-              <div className="surface-card rounded-2xl border border-white/8 p-5 flex-1 space-y-4">
-                <p className="label-caps">Snapshot Details</p>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="asOnDate" className="text-sm font-medium text-foreground/70">
+          {/* ── Snapshot Details + Actions (compact bar) ── */}
+          <div className="surface-card rounded-2xl border border-border p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+              {/* Fields */}
+              <div className="flex flex-col sm:flex-row gap-4 flex-1">
+                <div className="space-y-1 flex-1">
+                  <Label htmlFor="asOnDate" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     As on Date <span className="text-destructive">*</span>
                   </Label>
                   <Input
@@ -247,10 +291,9 @@ export default function SnapshotPage() {
                     <p className="text-xs text-destructive">{profileErrors.asOnDate}</p>
                   )}
                 </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="fullName" className="text-sm font-medium text-foreground/70">
-                    Full Name <span className="text-xs text-foreground/30">(for certificate)</span>
+                <div className="space-y-1 flex-1">
+                  <Label htmlFor="fullName" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Full Name <span className="text-[9px] font-medium normal-case tracking-normal text-muted-foreground/70">(for certificate)</span>
                   </Label>
                   <Input
                     id="fullName"
@@ -265,39 +308,49 @@ export default function SnapshotPage() {
                 </div>
               </div>
 
-              {/* Buttons below Snapshot Details */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Action buttons */}
+              <div className="flex gap-3 shrink-0">
                 <button
                   onClick={handleSaveSnapshot}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Save className="h-4 w-4" />
-                  Save Snapshot
+                  Save
                 </button>
                 <button
                   onClick={handleGeneratePdf}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex items-center gap-2 rounded-xl border border-border bg-secondary px-5 py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-muted active:scale-[0.98]"
                 >
                   <FileDown className="h-4 w-4" />
-                  Generate Certificate
+                  Certificate
                 </button>
               </div>
-
-              {/* Status feedback */}
-              {snapshotStatus && (
-                <div className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-medium ${
-                  snapshotStatus.type === "success"
-                    ? "bg-success/10 border border-success/20 text-success"
-                    : "bg-destructive/10 border border-destructive/20 text-destructive"
-                }`}>
-                  {snapshotStatus.type === "success"
-                    ? <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    : <AlertCircle className="h-4 w-4 shrink-0" />}
-                  {snapshotStatus.message}
-                </div>
-              )}
             </div>
+
+            {/* Status feedback */}
+            {snapshotStatus && (
+              <div className={`mt-3 flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-medium ${
+                snapshotStatus.type === "success"
+                  ? "bg-success/10 border border-success/20 text-success"
+                  : "bg-destructive/10 border border-destructive/20 text-destructive"
+              }`}>
+                {snapshotStatus.type === "success"
+                  ? <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  : <AlertCircle className="h-4 w-4 shrink-0" />}
+                {snapshotStatus.message}
+              </div>
+            )}
           </div>
+
+          {/* ── Snapshot History ── */}
+          {snapshots.length > 0 && (
+            <SnapshotHistory
+              snapshots={snapshots}
+              deleteSnapshot={deleteSnapshot}
+              expandedId={expandedId}
+              setExpandedId={setExpandedId}
+            />
+          )}
         </div>
 
       {/* Add / Edit Dialog */}
@@ -326,5 +379,196 @@ export default function SnapshotPage() {
         </DialogContent>
       </Dialog>
     </DashboardPageShell>
+  );
+}
+
+// --- Helpers ---
+
+function formatCurrency(value: number): string {
+  const formatted = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(Math.abs(value));
+  return (value < 0 ? "- " : "") + formatted;
+}
+
+// --- Snapshot History ---
+
+function SnapshotHistory({
+  snapshots,
+  deleteSnapshot,
+  expandedId,
+  setExpandedId,
+}: {
+  snapshots: NetWorthSnapshot[];
+  deleteSnapshot: (id: string) => void;
+  expandedId: string | null;
+  setExpandedId: (id: string | null) => void;
+}) {
+  const sortedDesc = [...snapshots].sort((a, b) =>
+    b.date.localeCompare(a.date)
+  );
+
+  return (
+    <div className="surface-card rounded-3xl p-6 sm:p-8 border border-border">
+      <h2 className="label-caps mb-8">Snapshot History</h2>
+      <div className="overflow-x-auto -mx-6 sm:mx-0">
+        <table className="w-full text-sm border-separate border-spacing-y-2">
+          <thead>
+            <tr className="text-left text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+              <th className="pb-4 px-4 font-bold">Date</th>
+              <th className="pb-4 px-4 font-bold text-right">Total Assets</th>
+              <th className="pb-4 px-4 font-bold text-right">Total Liabilities</th>
+              <th className="pb-4 px-4 font-bold text-right">Net Worth</th>
+              <th className="pb-4 px-4 font-bold text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="space-y-2">
+            {sortedDesc.map((snapshot) => (
+              <SnapshotRow
+                key={snapshot.id}
+                snapshot={snapshot}
+                isExpanded={expandedId === snapshot.id}
+                onToggle={() =>
+                  setExpandedId(
+                    expandedId === snapshot.id ? null : snapshot.id
+                  )
+                }
+                onDelete={() => deleteSnapshot(snapshot.id)}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function SnapshotRow({
+  snapshot,
+  isExpanded,
+  onToggle,
+  onDelete,
+}: {
+  snapshot: NetWorthSnapshot;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onDelete: () => void;
+}) {
+  const assets = snapshot.entries.filter((e) => e.category === "asset");
+  const liabilities = snapshot.entries.filter(
+    (e) => e.category === "liability"
+  );
+
+  return (
+    <>
+      <tr
+        className={cn(
+          "group transition-all duration-300 cursor-pointer border border-transparent",
+          isExpanded ? "bg-secondary border-border" : "hover:bg-secondary"
+        )}
+        onClick={onToggle}
+      >
+        <td className="py-4 px-4 rounded-l-2xl">
+          <div className="flex items-center gap-3">
+            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border group-hover:border-primary/20 transition-colors">
+              {isExpanded ? (
+                <ChevronUp className="h-3 w-3 text-primary" />
+              ) : (
+                <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              )}
+            </div>
+            <span className="font-medium tracking-tight">{snapshot.date}</span>
+          </div>
+        </td>
+        <td className="py-4 px-4 text-right text-success font-semibold tabular-nums">
+          {formatCurrency(snapshot.totalAssets)}
+        </td>
+        <td className="py-4 px-4 text-right text-destructive font-semibold tabular-nums">
+          {formatCurrency(snapshot.totalLiabilities)}
+        </td>
+        <td className="py-4 px-4 text-right font-semibold text-foreground tabular-nums">
+          {formatCurrency(snapshot.netWorth)}
+        </td>
+        <td className="py-4 px-4 text-right rounded-r-2xl">
+          <button
+            className="h-9 w-9 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-90"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </td>
+      </tr>
+      {isExpanded && (
+        <tr>
+          <td colSpan={5} className="px-4 pb-4">
+            <div className="surface-card rounded-2xl p-6 border border-border animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-success mb-4 flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                    Asset Distribution ({assets.length})
+                  </h4>
+                  {assets.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No asset entries detected.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {assets.map((entry) => (
+                        <li
+                          key={entry.id}
+                          className="flex justify-between text-sm group/item"
+                        >
+                          <span className="text-muted-foreground group-hover/item:text-foreground transition-colors">
+                            {entry.description || entry.statementType}
+                          </span>
+                          <span className="text-success font-semibold tabular-nums">
+                            {formatCurrency(
+                              (entry.closingBalance * entry.ownershipPercentage) /
+                                100
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-destructive mb-4 flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                    Liability Portfolio ({liabilities.length})
+                  </h4>
+                  {liabilities.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No liabilities recorded.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {liabilities.map((entry) => (
+                        <li
+                          key={entry.id}
+                          className="flex justify-between text-sm group/item"
+                        >
+                          <span className="text-muted-foreground group-hover/item:text-foreground transition-colors">
+                            {entry.description || entry.statementType}
+                          </span>
+                          <span className="text-destructive font-semibold tabular-nums">
+                            {formatCurrency(
+                              (entry.closingBalance * entry.ownershipPercentage) /
+                                100
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }

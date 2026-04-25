@@ -74,11 +74,26 @@ export interface InsightItem {
   id: string;
   domain: InsightDomain;
   title: string;
+  /** Short verdict-style headline in plain English (e.g. "You're holding too much idle cash"). Falls back to title if absent. */
+  plainTitle?: string;
   description: string;
+  /** One-sentence explanation of why this metric matters, written for non-finance users. */
+  plainExplanation?: string;
+  /** One concrete next step, ideally with a number (e.g. "Move ~₹2L into a liquid fund"). */
+  suggestedAction?: string;
   severity: InsightSeverity;
   trend?: InsightTrend;
   metricValue?: number;
   metricLabel?: string;
+  /** Thresholds for rendering a healthy/warning/critical gauge. Interpreted as fractions when metricValue is a ratio, or absolute otherwise. */
+  benchmark?: {
+    warningAt: number;
+    criticalAt: number;
+    /** If true, lower values are worse (e.g. productive-asset ratio). Default false. */
+    inverted?: boolean;
+    min?: number;
+    max?: number;
+  };
   unavailable?: boolean;
   unavailableReason?: string;
 }
@@ -91,7 +106,7 @@ export interface InsightResult {
     info: number;
   };
   domains: Record<InsightDomain, InsightItem[]>;
-  advancedResults?: AdvancedDimensionResults;
+  advancedResults: AdvancedDimensionResults;
   computedAt: string;
 }
 
@@ -109,6 +124,9 @@ export interface AdvancedInputs {
   existing_health_cover?: number;
   ppf_annual_contribution?: number;
   vpf_contribution?: number;
+  monthly_sip_amount?: number;
+  has_will_created?: boolean;
+  has_international_funds?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -261,6 +279,83 @@ export interface AdvancedDimensionResults {
   trajectory?: TrajectoryResult;
   protection?: ProtectionResult;
 }
+
+// ---------------------------------------------------------------------------
+// Wealth Journey — Stage Classification & Checklists
+// ---------------------------------------------------------------------------
+
+export type WealthStage = "foundation" | "stability" | "acceleration" | "optimization" | "preservation";
+
+export interface StageConfig {
+  id: WealthStage;
+  label: string;
+  range: [number, number];
+  color: string;
+  mindset: string;
+  goal: string;
+  stageIndex: number;
+  scoreLabel: string;
+}
+
+export type ChecklistCategory = "protection" | "growth" | "behavior" | "tax" | "diversification";
+export type ChecklistStatus = "done" | "partial" | "todo" | "not_applicable";
+
+export interface ChecklistItemDef {
+  id: string;
+  stage: WealthStage;
+  label: string;
+  category: ChecklistCategory;
+  weight: number;
+}
+
+export interface ChecklistResult {
+  id: string;
+  label: string;
+  category: ChecklistCategory;
+  weight: number;
+  status: ChecklistStatus;
+  score: number;
+  message: string;
+  actionHint?: string;
+}
+
+export interface ChecklistContext {
+  netWorth: number;
+  stage: WealthStage;
+  balanceSheet: BalanceSheet;
+  advancedInputs?: AdvancedInputs;
+  insightResult: InsightResult;
+  snapshots: NetWorthSnapshot[];
+}
+
+export interface StageHistoryEntry {
+  date: string;
+  stage: WealthStage;
+  score: number;
+}
+
+export interface JourneyProjection {
+  monthsToNextStage: number | null;
+  projectedDate: string | null;
+  avgMonthlyGrowth: number;
+}
+
+export interface JourneyResult {
+  stage: StageConfig | null;
+  previousStage?: StageConfig;
+  transitioned: boolean;
+  progress: number;
+  checklist: ChecklistResult[];
+  score: { value: number; label: string; insufficientData: boolean };
+  stageHistory: StageHistoryEntry[];
+  focusItem: ChecklistResult | null;
+  projection: JourneyProjection | null;
+  delta: { scoreDelta: number; netWorthDelta: number; previousDate: string } | null;
+}
+
+// ---------------------------------------------------------------------------
+// Statement Type Presets
+// ---------------------------------------------------------------------------
 
 export const STATEMENT_TYPE_PRESETS: StatementTypePreset[] = [
   { label: "Savings Bank Account", category: "asset" },

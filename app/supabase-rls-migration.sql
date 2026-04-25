@@ -151,3 +151,24 @@ CREATE POLICY "Users can update own profile"
   ON user_profiles FOR UPDATE
   USING ((select auth.jwt() ->> 'sub') = user_id)
   WITH CHECK ((select auth.jwt() ->> 'sub') = user_id);
+
+-- =========================================================================
+-- advanced_inputs
+-- =========================================================================
+ALTER TABLE advanced_inputs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own advanced_inputs" ON advanced_inputs;
+CREATE POLICY "Users can view own advanced_inputs"
+  ON advanced_inputs FOR SELECT
+  USING ((select auth.jwt() ->> 'sub') = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own advanced_inputs" ON advanced_inputs;
+CREATE POLICY "Users can insert own advanced_inputs"
+  ON advanced_inputs FOR INSERT
+  WITH CHECK ((select auth.jwt() ->> 'sub') = user_id);
+
+DROP POLICY IF EXISTS "Users can update own advanced_inputs" ON advanced_inputs;
+CREATE POLICY "Users can update own advanced_inputs"
+  ON advanced_inputs FOR UPDATE
+  USING ((select auth.jwt() ->> 'sub') = user_id)
+  WITH CHECK ((select auth.jwt() ->> 'sub') = user_id);

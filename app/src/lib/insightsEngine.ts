@@ -16,6 +16,7 @@ import {
   computeTrajectory,
   computeProtection,
 } from "./advancedDimensions";
+import { enrichInsight } from "./insightCopy";
 
 // ---------------------------------------------------------------------------
 // Thresholds & Configuration
@@ -888,6 +889,11 @@ export function computeAllInsights(
         unavailableReason: "Requires monthly income",
       });
     }
+  }
+
+  // --- Enrich every insight with plain-English copy & benchmarks ---
+  for (const key of Object.keys(domains) as InsightDomain[]) {
+    domains[key] = domains[key].map(enrichInsight);
   }
 
   // --- Summary ---
