@@ -64,6 +64,9 @@ export async function POST(request: NextRequest) {
         checklist: [],
         score: { value: 0, label: "", insufficientData: true },
         stageHistory: [],
+        focusItem: null,
+        projection: null,
+        delta: null,
       };
       return NextResponse.json(emptyResult);
     }
